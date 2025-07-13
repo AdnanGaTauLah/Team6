@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
@@ -12,8 +13,8 @@ public class GameManager : MonoBehaviour
     [Tooltip("A reference to the EventController script in the scene.")]
     public EventController eventController;
 
-    // This would be a reference to your UI manager script
-    // public UIManager uiManager;
+    // --- INPUT ---
+    private PlayerInput gameControls; // The generated C# class for our input actions
 
     // --- GAME STATE ---
     private Event currentEvent;
@@ -22,109 +23,118 @@ public class GameManager : MonoBehaviour
     // --- UNITY LIFECYCLE ---
 
     /// <summary>
+    /// Awake is called when the script instance is being loaded.
+    /// It's the ideal place to initialize systems like input.
+    /// </summary>
+    void Awake()
+    {
+        // Initialize the input action asset
+        gameControls = new PlayerInput();
+
+        // It's good practice to check if references are set in the editor.
+        if (player == null || eventController == null)
+        {
+            Debug.LogError("GameManager is missing references! Assign Player and EventController in the Inspector.");
+            this.enabled = false;
+            return;
+        }
+    }
+
+    /// <summary>
+    /// OnEnable is called when the object becomes enabled and active.
+    /// This is where we subscribe to our input events.
+    /// </summary>
+    private void OnEnable()
+    {
+        // Enable the 'Gameplay' action map
+        gameControls.Gameplay.Enable();
+
+        // Subscribe our methods to the 'performed' event of each action
+        // The '+=' operator adds a listener to the event.
+        gameControls.Gameplay.ChooseYes.performed += OnChooseYes;
+        gameControls.Gameplay.ChooseNo.performed += OnChooseNo;
+    }
+
+    /// <summary>
+    /// OnDisable is called when the object becomes disabled or inactive.
+    /// It's crucial to unsubscribe from events to prevent memory leaks.
+    /// </summary>
+    private void OnDisable()
+    {
+        // Unsubscribe from the events to clean up
+        // The '-=' operator removes the listener.
+        gameControls.Gameplay.ChooseYes.performed -= OnChooseYes;
+        gameControls.Gameplay.ChooseNo.performed -= OnChooseNo;
+
+        // Disable the action map
+        gameControls.Gameplay.Disable();
+    }
+
+    /// <summary>
     /// Called when the script instance is being loaded.
     /// This is the main entry point for the game.
     /// </summary>
     void Start()
     {
-        // It's good practice to check if references are set in the editor.
-        if (player == null || eventController == null)
-        {
-            Debug.LogError("GameManager is missing references! Assign Player and EventController in the Inspector.");
-            // Disable the component to prevent further errors.
-            this.enabled = false;
-            return;
-        }
-
         StartGame();
     }
 
+    // We no longer need the Update() method for input!
+
+    // --- INPUT HANDLERS ---
+
     /// <summary>
-    /// Contains temporary logic for testing the game flow using keyboard input.
+    /// This method is called automatically by the Input System when the 'ChooseYes' action is performed.
     /// </summary>
-    void Update()
+    private void OnChooseYes(InputAction.CallbackContext context)
     {
-        // Don't do anything if the game is over.
-        if (isGameOver)
-        {
-            return;
-        }
+        MakeChoice(true);
+    }
 
-        // --- TEST INPUT ---
-        // Press 'Y' to simulate choosing "Yes"
-        if (Input.GetKeyDown(KeyCode.Y))
-        {
-            MakeChoice(true);
-        }
-
-        // Press 'N' to simulate choosing "No"
-        if (Input.GetKeyDown(KeyCode.N))
-        {
-            MakeChoice(false);
-        }
+    /// <summary>
+    /// This method is called automatically by the Input System when the 'ChooseNo' action is performed.
+    /// </summary>
+    private void OnChooseNo(InputAction.CallbackContext context)
+    {
+        MakeChoice(false);
     }
 
 
-    // --- CORE GAME LOGIC ---
+    // --- CORE GAME LOGIC (No changes needed here) ---
 
-    /// <summary>
-    /// Initializes the game state and starts the first event.
-    /// </summary>
     private void StartGame()
     {
         Debug.Log("Game Started!");
         isGameOver = false;
-        // In a full game, you might reset player stats here.
         SelectNewEvent();
     }
 
-    /// <summary>
-    /// Gets a new random event from the EventController and displays it.
-    /// </summary>
     private void SelectNewEvent()
     {
         currentEvent = eventController.GetRandomEvent();
-
-        // Log the new question to the console for now.
-        // Later, you would pass this to the UIManager.
         Debug.Log("NEW EVENT: " + currentEvent.question);
         Debug.Log("Press 'Y' for Yes, 'N' for No.");
     }
 
-    /// <summary>
-    /// Processes the player's choice for the current event.
-    /// </summary>
-    /// <param name="choseYes">True if the player chose 'Yes', false for 'No'.</param>
     public void MakeChoice(bool choseYes)
     {
-        if (isGameOver) return; // Safety check
+        if (isGameOver) return;
 
-        // Determine which outcome to use based on the choice
         Player.StatChange outcome = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
-
-        // Apply the outcome to the player's stats
         player.UpdateStats(outcome);
-
-        // Check if the game should end
         CheckForGameOver();
 
-        // If the game is not over, get the next event
         if (!isGameOver)
         {
             SelectNewEvent();
         }
     }
 
-    /// <summary>
-    /// Checks if any of the player's resources have dropped below zero.
-    /// If so, it triggers the game over state.
-    /// </summary>
     private void CheckForGameOver()
     {
         if (player.survival < 0 || player.happiness < 0 || player.wealth < 0)
         {
             isGameOver = true;
-            // In a real game, you would call a method in your UIManager to show a game over screen.
             Debug.LogWarning("--- GAME OVER ---");
             Debug.LogWarning($"Final Stats: Survival={player.survival}, Happiness={player.happiness}, Wealth={player.wealth}");
         }

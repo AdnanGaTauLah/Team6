@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "name": "PlayerInput",
+    "maps": [
+        {
+            "name": "Gameplay",
+            "id": "35203459-60d2-40fc-9222-478920c4ef71",
+            "actions": [
+                {
+                    "name": "ChooseYes",
+                    "type": "Button",
+                    "id": "4c6c7d69-4a4a-4fe9-b60f-5b9a628e722b",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ChooseNo",
+                    "type": "Button",
+                    "id": "2a6def18-acd6-4f08-8ae1-6121a3933758",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "03b34ffb-8ebe-4013-a6e0-be14986247b0",
+                    "path": "<Keyboard>/y",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ChooseYes",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "469f8ac1-3daa-470d-aec9-abeef302ac22",
+                    "path": "<Keyboard>/n",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ChooseNo",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
