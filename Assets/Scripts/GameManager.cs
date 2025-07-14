@@ -1,13 +1,21 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
+    // --- EVENTS (The Observer Pattern) ---
+    // These are the "broadcasts" other scripts can listen to.
+    public static event Action<int> OnDayChanged;
+    public static event Action<Player> OnStatsUpdated;
+    public static event Action<GameEvent> OnNewEvent;
+    public static event Action OnGameOver;
+    public static event Action<bool> OnChoiceMade;
+
     // --- REFERENCES ---
     [Header("Component References")]
     public Player player;
     public EventController eventController;
-    public UIManager uiManager; // Reference to the UI Manager
 
     [Header("Game Configuration")]
     public int questionsPerDay = 3;
@@ -28,26 +36,39 @@ public class GameManager : MonoBehaviour
     {
         gameControls = new PlayerControls();
 
-        if (player == null || eventController == null || uiManager == null)
+        if (player == null || eventController == null)
         {
-            Debug.LogError("GameManager is missing references! Assign Player, EventController, and UIManager in the Inspector.");
+            Debug.LogError("GameManager is missing references! Assign Player and EventController in the Inspector.");
             this.enabled = false;
         }
     }
 
     private void OnEnable()
     {
+        // Listen to its own internal event
+        OnChoiceMade += MakeChoice;
+
         gameControls.Gameplay.Enable();
         // We keep keyboard controls for quick testing
         gameControls.Gameplay.ChooseYes.performed += OnChooseYes;
         gameControls.Gameplay.ChooseNo.performed += OnChooseNo;
+
+        // Listen for choices coming from the UI's new event
+        UIManager.OnChoiceButtonPressed += ReportChoice;
     }
 
     private void OnDisable()
     {
+        OnChoiceMade -= MakeChoice;
+
         gameControls.Gameplay.ChooseYes.performed -= OnChooseYes;
         gameControls.Gameplay.ChooseNo.performed -= OnChooseNo;
+        
+        OnChoiceMade -= MakeChoice;
         gameControls.Gameplay.Disable();
+
+        // Stop listening for UI events
+        UIManager.OnChoiceButtonPressed -= ReportChoice;
     }
 
     void Start()
@@ -55,9 +76,23 @@ public class GameManager : MonoBehaviour
         StartGame();
     }
 
-    // --- INPUT HANDLERS ---
-    private void OnChooseYes(InputAction.CallbackContext context) => MakeChoice(true);
-    private void OnChooseNo(InputAction.CallbackContext context) => MakeChoice(false);
+    // --- Input Handling ---
+    private void ReportChoiceFromInput(InputAction.CallbackContext context)
+    {
+        // This method handles the context from the Input System
+        bool choice = context.action == gameControls.Gameplay.ChooseYes;
+        ReportChoice(choice);
+    }
+
+    private void ReportChoice(bool choice)
+    {
+        // This single method is called by either keyboard OR UI events
+        // It then invokes the private event that the game logic listens to
+        OnChoiceMade?.Invoke(choice);
+    }
+    // Input handlers now just fire the event
+    private void OnChooseYes(InputAction.CallbackContext context) => OnChoiceMade?.Invoke(true);
+    private void OnChooseNo(InputAction.CallbackContext context) => OnChoiceMade?.Invoke(false);
 
     // --- CORE GAME LOGIC ---
     private void StartGame()
@@ -67,10 +102,8 @@ public class GameManager : MonoBehaviour
         currentDay = 1;
         questionsAnsweredToday = 0;
 
-        // Setup UI connections and initial state
-        uiManager.SetupButtonListeners(this);
-        uiManager.HideGameOverScreen();
-        uiManager.UpdateStatsDisplay(player);
+        // Broadcast the initial state
+        OnStatsUpdated?.Invoke(player);
 
         BeginNewDay();
     }
@@ -81,7 +114,7 @@ public class GameManager : MonoBehaviour
     private void BeginNewDay()
     {
         Debug.Log("--- Starting Day " + currentDay + " ---");
-        uiManager.UpdateDayDisplay(currentDay);
+        OnDayChanged?.Invoke(currentDay);
         eventController.StartNewDay(); // Reset the list of used events
         SelectNewEvent();
     }
@@ -89,7 +122,7 @@ public class GameManager : MonoBehaviour
     private void SelectNewEvent()
     {
         currentEvent = eventController.GetUniqueEventForDay();
-        uiManager.DisplayEvent(currentEvent);
+        OnNewEvent?.Invoke(currentEvent); // Broadcast the new event
     }
 
     /// <summary>
@@ -102,14 +135,14 @@ public class GameManager : MonoBehaviour
         EventOutcome outcomeWithRanges = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
         Player.StatChange finalOutcome = new Player.StatChange();
 
-        finalOutcome.survivalChange = Random.Range(outcomeWithRanges.survivalChange.min, outcomeWithRanges.survivalChange.max + 1);
-        finalOutcome.happinessChange = Random.Range(outcomeWithRanges.happinessChange.min, outcomeWithRanges.happinessChange.max + 1);
-        finalOutcome.wealthChange = Random.Range(outcomeWithRanges.wealthChange.min, outcomeWithRanges.wealthChange.max + 1);
+        finalOutcome.survivalChange = UnityEngine.Random.Range(outcomeWithRanges.survivalChange.min, outcomeWithRanges.survivalChange.max + 1);
+        finalOutcome.happinessChange = UnityEngine.Random.Range(outcomeWithRanges.happinessChange.min, outcomeWithRanges.happinessChange.max + 1);
+        finalOutcome.wealthChange = UnityEngine.Random.Range(outcomeWithRanges.wealthChange.min, outcomeWithRanges.wealthChange.max + 1);
 
         player.UpdateStats(finalOutcome);
 
-        // Immediately update the UI to show the new stat values
-        uiManager.UpdateStatsDisplay(player);
+        // Broadcast that stats have been updated
+        OnStatsUpdated?.Invoke(player);
 
         CheckForGameOver();
 
@@ -140,11 +173,10 @@ public class GameManager : MonoBehaviour
 
     private void CheckForGameOver()
     {
-        if (player.survival < 0 || player.happiness < 0 || player.wealth < 0)
+        if (player.Survival < 0 || player.Happiness < 0 || player.Wealth < 0)
         {
             isGameOver = true;
-            // Show the game over screen
-            uiManager.ShowGameOverScreen();
+            OnGameOver?.Invoke(); // Broadcast that the game is over
         }
     }
 }

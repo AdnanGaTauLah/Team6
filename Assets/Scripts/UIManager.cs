@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 public class UIManager : MonoBehaviour
 {
+    public static event Action<bool> OnChoiceButtonPressed;
+
     [Header("UI Panels")]
     [Tooltip("A parent object that holds all the active gameplay UI (stats, question, buttons).")]
     [SerializeField] private GameObject gameplayPanel;
@@ -24,6 +27,35 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button yesButton;
     [SerializeField] private Button noButton;
 
+    // --- Subscribing to Events ---
+    private void OnEnable()
+    {
+        // Start listening for broadcasts from the GameManager
+        GameManager.OnDayChanged += UpdateDayDisplay;
+        GameManager.OnStatsUpdated += UpdateStatsDisplay;
+        GameManager.OnNewEvent += DisplayEvent;
+        GameManager.OnGameOver += ShowGameOverScreen;
+    }
+
+    // --- Unsubscribing from Events ---
+    private void OnDisable()
+    {
+        // Stop listening when this object is disabled to prevent errors
+        GameManager.OnDayChanged -= UpdateDayDisplay;
+        GameManager.OnStatsUpdated -= UpdateStatsDisplay;
+        GameManager.OnNewEvent -= DisplayEvent;
+        GameManager.OnGameOver -= ShowGameOverScreen;
+    }
+
+    void Start()
+    {
+        // The UIManager now fires an event instead of calling the GameManager directly
+        yesButton.onClick.AddListener(() => OnChoiceButtonPressed?.Invoke(true));
+        noButton.onClick.AddListener(() => OnChoiceButtonPressed?.Invoke(false));
+
+        HideGameOverScreen();
+    }
+
     /// <summary>
     /// Updates the Day counter text.
     /// </summary>
@@ -41,9 +73,9 @@ public class UIManager : MonoBehaviour
     public void UpdateStatsDisplay(Player player)
     {
         if (player == null) return;
-        survivalText.text = "Survival: " + player.survival;
-        happinessText.text = "Happiness: " + player.happiness;
-        wealthText.text = "Wealth: " + player.wealth;
+        survivalText.text = "Survival: " + player.Survival;
+        happinessText.text = "Happiness: " + player.Happiness;
+        wealthText.text = "Wealth: " + player.Wealth;
     }
 
     /// <summary>

@@ -8,13 +8,20 @@ public class Player : MonoBehaviour
     // These are public so you can see and edit their starting values in the Unity Inspector.
     [Header("Player Resources")]
     [Tooltip("Represents the player's health and physical well-being. Game over if this drops below 0.")]
-    [SerializeField]public int survival = 50;
+    [SerializeField] private int _survival = 50;
 
     [Tooltip("Represents the player's mental state and joy. Game over if this drops below 0.")]
-    [SerializeField]public int happiness = 50;
+    [SerializeField] private int _happiness = 50;
 
     [Tooltip("Represents the player's financial resources. Game over if this drops below 0.")]
-    [SerializeField]public int wealth = 50;
+    [SerializeField] private int _wealth = 50;
+
+    // --- PUBLIC PROPERTIES (The "Getters") ---
+    // We expose the data through public "properties" that can only be read, not set, from the outside.
+    // This is the public-facing, safe way to access the stats.
+    public int Survival => _survival;
+    public int Happiness => _happiness;
+    public int Wealth => _wealth;
 
     // --- METHODS ---
 
@@ -37,12 +44,12 @@ public class Player : MonoBehaviour
     /// <param name="outcome">A StatChange object containing the values to add to the current stats.</param>
     public void UpdateStats(StatChange outcome)
     {
-        survival += outcome.survivalChange;
-        happiness += outcome.happinessChange;
-        wealth += outcome.wealthChange;
+        _survival += outcome.survivalChange;
+        _happiness += outcome.happinessChange;
+        _wealth += outcome.wealthChange;
 
         // Optional: You can add logging to see the changes in the console for debugging.
-        Debug.Log($"Stats Updated: Survival={survival}, Happiness={happiness}, Wealth={wealth}");
+        Debug.Log($"Stats Updated: Survival={Survival}, Happiness={Happiness}, Wealth={Wealth}");
     }
 
     // --- UNITY LIFECYCLE (for testing) ---
