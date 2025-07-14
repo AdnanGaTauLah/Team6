@@ -19,10 +19,21 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI wealthText;
 
     [Header("Event Display")]
+    [SerializeField] private TextMeshProUGUI dayText;
     [SerializeField] private TextMeshProUGUI questionText;
     [SerializeField] private Button yesButton;
     [SerializeField] private Button noButton;
 
+    /// <summary>
+    /// Updates the Day counter text.
+    /// </summary>
+    public void UpdateDayDisplay(int day)
+    {
+        if (dayText != null)
+        {
+            dayText.text = "Day: " + day;
+        }
+    }
 
     /// <summary>
     /// Updates the text elements that display the player's current stats.

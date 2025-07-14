@@ -58,7 +58,7 @@ public class EventController : MonoBehaviour
     public string jsonFileName = "events.json";
 
     private List<GameEvent> allEvents;
-    private GameEvent currentEvent;
+    private List<GameEvent> eventsUsedThisDay = new List<GameEvent>();
 
     // --- UNITY LIFECYCLE ---
     void Awake()
@@ -86,28 +86,33 @@ public class EventController : MonoBehaviour
     }
 
     /// <summary>
-    /// Selects and returns a random event from the loaded list.
+    /// Gets a random event that has not yet been used today.
     /// </summary>
-    public GameEvent GetRandomEvent()
+    public GameEvent GetUniqueEventForDay()
     {
-        if (allEvents == null || allEvents.Count == 0)
+        if (allEvents == null || allEvents.Count == 0) return null;
+
+        // If we've used up all available events, reset the daily list to avoid an infinite loop.
+        if (eventsUsedThisDay.Count >= allEvents.Count)
         {
-            Debug.LogError("Event list is empty! Cannot get a random event. Was the JSON loaded correctly?");
-            return null;
+            eventsUsedThisDay.Clear();
         }
 
-        if (allEvents.Count == 1)
-        {
-            return allEvents[0];
-        }
-
-        GameEvent newEvent = allEvents[Random.Range(0, allEvents.Count)];
-        while (newEvent == currentEvent)
+        GameEvent newEvent;
+        do
         {
             newEvent = allEvents[Random.Range(0, allEvents.Count)];
-        }
+        } while (eventsUsedThisDay.Contains(newEvent)); // Keep picking until we find one not used today
 
-        currentEvent = newEvent;
-        return currentEvent;
+        eventsUsedThisDay.Add(newEvent); // Add the new event to the list of used events for this day
+        return newEvent;
+    }
+
+    /// <summary>
+    /// Clears the list of used events. Called by the GameManager at the start of a new day.
+    /// </summary>
+    public void StartNewDay()
+    {
+        eventsUsedThisDay.Clear();
     }
 }

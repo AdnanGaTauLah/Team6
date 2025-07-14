@@ -9,12 +9,19 @@ public class GameManager : MonoBehaviour
     public EventController eventController;
     public UIManager uiManager; // Reference to the UI Manager
 
+    [Header("Game Configuration")]
+    public int questionsPerDay = 3;
+
     // --- INPUT ---
     private PlayerControls gameControls;
 
     // --- GAME STATE ---
     private GameEvent currentEvent;
     private bool isGameOver = false;
+
+    // --- Day Cycle State ---
+    private int currentDay = 1;
+    private int questionsAnsweredToday = 0;
 
     // --- UNITY LIFECYCLE ---
     void Awake()
@@ -57,19 +64,31 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Game Started!");
         isGameOver = false;
+        currentDay = 1;
+        questionsAnsweredToday = 0;
 
         // Setup UI connections and initial state
         uiManager.SetupButtonListeners(this);
         uiManager.HideGameOverScreen();
         uiManager.UpdateStatsDisplay(player);
 
+        BeginNewDay();
+    }
+
+    /// <summary>
+    /// Sets up the start of a new day.
+    /// </summary>
+    private void BeginNewDay()
+    {
+        Debug.Log("--- Starting Day " + currentDay + " ---");
+        uiManager.UpdateDayDisplay(currentDay);
+        eventController.StartNewDay(); // Reset the list of used events
         SelectNewEvent();
     }
 
     private void SelectNewEvent()
     {
-        currentEvent = eventController.GetRandomEvent();
-        // Update the UI instead of logging to the console
+        currentEvent = eventController.GetUniqueEventForDay();
         uiManager.DisplayEvent(currentEvent);
     }
 
@@ -94,8 +113,27 @@ public class GameManager : MonoBehaviour
 
         CheckForGameOver();
 
-        if (!isGameOver)
+        // --- New Day Logic ---
+        questionsAnsweredToday++;
+        Debug.Log("Answered question " + questionsAnsweredToday + " of " + questionsPerDay);
+
+        if (questionsAnsweredToday >= questionsPerDay)
         {
+            // End of the day, check for game over
+            Debug.Log("End of day. Checking for game over.");
+            CheckForGameOver();
+
+            if (!isGameOver)
+            {
+                // If not game over, start the next day
+                currentDay++;
+                questionsAnsweredToday = 0;
+                BeginNewDay();
+            }
+        }
+        else
+        {
+            // It's not the end of the day, just get the next question
             SelectNewEvent();
         }
     }
