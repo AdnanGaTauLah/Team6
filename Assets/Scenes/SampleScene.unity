@@ -183,7 +183,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 20
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -256,8 +256,8 @@ Transform:
   m_GameObject: {fileID: 857473654}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.42, y: 2.97, z: -0.1208478}
-  m_LocalScale: {x: 9.9, y: 9.9, z: 9.9}
+  m_LocalPosition: {x: 25.2, y: -6.9, z: -0.1208478}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -303,8 +303,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Color: {r: 1, g: 0.9022858, b: 0, a: 1}
+  m_Sprite: {fileID: 21300000, guid: d80c8fe59e57f59499051269096edbe0, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -343,34 +343,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e24b2b62993348b42a329532c4d1ee4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  allEvents:
-  - question: Hai ganteng
-    yesOutcome:
-      survivalChange: 100
-      happinessChange: -100
-      wealthChange: 100
-    noOutcome:
-      survivalChange: -100
-      happinessChange: 100
-      wealthChange: -100
-  - question: Pagi ganteng
-    yesOutcome:
-      survivalChange: 20
-      happinessChange: -20
-      wealthChange: 20
-    noOutcome:
-      survivalChange: -20
-      happinessChange: 20
-      wealthChange: -20
-  - question: Siang ganteng
-    yesOutcome:
-      survivalChange: 40
-      happinessChange: -40
-      wealthChange: 40
-    noOutcome:
-      survivalChange: -40
-      happinessChange: 40
-      wealthChange: -40
+  jsonFileName: Events.json
 --- !u!4 &1434046772
 Transform:
   m_ObjectHideFlags: 0

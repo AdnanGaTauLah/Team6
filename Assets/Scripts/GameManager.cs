@@ -7,24 +7,23 @@ public class GameManager : MonoBehaviour
     [Header("Component References")]
     public Player player;
     public EventController eventController;
+    public UIManager uiManager; // Reference to the UI Manager
 
     // --- INPUT ---
-    // Renamed to PlayerControls to avoid conflicts with Unity's PlayerInput component.
     private PlayerControls gameControls;
 
     // --- GAME STATE ---
-    private GameEvent currentEvent; // This now holds the event with stat ranges
+    private GameEvent currentEvent;
     private bool isGameOver = false;
 
     // --- UNITY LIFECYCLE ---
     void Awake()
     {
-        // Initialize with the new, non-conflicting class name.
         gameControls = new PlayerControls();
 
-        if (player == null || eventController == null)
+        if (player == null || eventController == null || uiManager == null)
         {
-            Debug.LogError("GameManager is missing references!");
+            Debug.LogError("GameManager is missing references! Assign Player, EventController, and UIManager in the Inspector.");
             this.enabled = false;
         }
     }
@@ -32,6 +31,7 @@ public class GameManager : MonoBehaviour
     private void OnEnable()
     {
         gameControls.Gameplay.Enable();
+        // We keep keyboard controls for quick testing
         gameControls.Gameplay.ChooseYes.performed += OnChooseYes;
         gameControls.Gameplay.ChooseNo.performed += OnChooseNo;
     }
@@ -57,14 +57,20 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Game Started!");
         isGameOver = false;
+
+        // Setup UI connections and initial state
+        uiManager.SetupButtonListeners(this);
+        uiManager.HideGameOverScreen();
+        uiManager.UpdateStatsDisplay(player);
+
         SelectNewEvent();
     }
 
     private void SelectNewEvent()
     {
         currentEvent = eventController.GetRandomEvent();
-        Debug.Log("NEW EVENT: " + currentEvent.question);
-        Debug.Log("Press 'Y' for Yes, 'N' for No.");
+        // Update the UI instead of logging to the console
+        uiManager.DisplayEvent(currentEvent);
     }
 
     /// <summary>
@@ -74,24 +80,18 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
 
-        // 1. Get the correct outcome containing the min/max ranges
         EventOutcome outcomeWithRanges = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
-
-        // 2. Create a new StatChange object to hold the final, randomized values
         Player.StatChange finalOutcome = new Player.StatChange();
 
-        // 3. Randomize each stat and assign it to our final outcome object.
-        // Note: Random.Range for integers has an exclusive upper bound, so we add 1 to the max value.
         finalOutcome.survivalChange = Random.Range(outcomeWithRanges.survivalChange.min, outcomeWithRanges.survivalChange.max + 1);
         finalOutcome.happinessChange = Random.Range(outcomeWithRanges.happinessChange.min, outcomeWithRanges.happinessChange.max + 1);
         finalOutcome.wealthChange = Random.Range(outcomeWithRanges.wealthChange.min, outcomeWithRanges.wealthChange.max + 1);
 
-        Debug.Log($"Outcome: Survival({finalOutcome.survivalChange}), Happiness({finalOutcome.happinessChange}), Wealth({finalOutcome.wealthChange})");
-
-        // 4. Apply the single, randomized stats to the player
         player.UpdateStats(finalOutcome);
 
-        // 5. Check for game over and select the next event
+        // Immediately update the UI to show the new stat values
+        uiManager.UpdateStatsDisplay(player);
+
         CheckForGameOver();
 
         if (!isGameOver)
@@ -105,8 +105,8 @@ public class GameManager : MonoBehaviour
         if (player.survival < 0 || player.happiness < 0 || player.wealth < 0)
         {
             isGameOver = true;
-            Debug.LogWarning("--- GAME OVER ---");
-            Debug.LogWarning($"Final Stats: Survival={player.survival}, Happiness={player.happiness}, Wealth={player.wealth}");
+            // Show the game over screen
+            uiManager.ShowGameOverScreen();
         }
     }
 }
