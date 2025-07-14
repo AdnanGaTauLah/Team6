@@ -6,6 +6,13 @@ using TMPro;
 
 public class UIManager : MonoBehaviour
 {
+    [Header("UI Panels")]
+    [Tooltip("A parent object that holds all the active gameplay UI (stats, question, buttons).")]
+    [SerializeField] private GameObject gameplayPanel;
+    [Tooltip("The panel that is shown when the game ends.")]
+    [SerializeField] private GameObject gameOverPanel;
+
+
     [Header("Stat Displays")]
     [SerializeField] private TextMeshProUGUI survivalText;
     [SerializeField] private TextMeshProUGUI happinessText;
@@ -16,8 +23,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button yesButton;
     [SerializeField] private Button noButton;
 
-    [Header("Game Over Screen")]
-    [SerializeField] private GameObject gameOverPanel;
 
     /// <summary>
     /// Updates the text elements that display the player's current stats.
@@ -40,19 +45,22 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Shows the Game Over panel.
+    /// Shows the Game Over screen and hides the main gameplay UI.
     /// </summary>
     public void ShowGameOverScreen()
     {
-        gameOverPanel.SetActive(true);
+        gameplayPanel.SetActive(false); // Hide the gameplay UI
+        gameOverPanel.SetActive(true);  // Show the game over screen
     }
 
     /// <summary>
-    /// Hides the Game Over panel.
+    /// Hides the Game Over panel and shows the main gameplay UI.
+    /// This is used to set the initial state of the game.
     /// </summary>
     public void HideGameOverScreen()
     {
-        gameOverPanel.SetActive(false);
+        gameplayPanel.SetActive(true);  // Show the gameplay UI
+        gameOverPanel.SetActive(false); // Hide the game over screen
     }
 
     /// <summary>
