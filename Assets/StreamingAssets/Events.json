@@ -3,53 +3,125 @@
     {
       "question": "A traveling merchant offers you a mysterious, glowing potion. Do you buy it?",
       "yesOutcome": {
-        "survivalChange": 10,
-        "happinessChange": 5,
-        "wealthChange": -20
+        "survivalChange": {
+          "min": 5,
+          "max": 15
+        },
+        "happinessChange": {
+          "min": 2,
+          "max": 8
+        },
+        "wealthChange": {
+          "min": -25,
+          "max": -15
+        }
       },
       "noOutcome": {
-        "survivalChange": 0,
-        "happinessChange": -5,
-        "wealthChange": 0
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": -7,
+          "max": -3
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
       }
     },
     {
       "question": "You find a lost puppy on the side of the road. Do you spend the day looking for its owner?",
       "yesOutcome": {
-        "survivalChange": -5,
-        "happinessChange": 15,
-        "wealthChange": 0
+        "survivalChange": {
+          "min": -10,
+          "max": -2
+        },
+        "happinessChange": {
+          "min": 10,
+          "max": 20
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
       },
       "noOutcome": {
-        "survivalChange": 0,
-        "happinessChange": -10,
-        "wealthChange": 0
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": -12,
+          "max": -8
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
       }
     },
     {
       "question": "A shady figure offers you a 'guaranteed' investment tip. Do you trust them with your savings?",
       "yesOutcome": {
-        "survivalChange": 0,
-        "happinessChange": 25,
-        "wealthChange": 50
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": -50,
+          "max": 50
+        },
+        "wealthChange": {
+          "min": -50,
+          "max": 100
+        }
       },
       "noOutcome": {
-        "survivalChange": 0,
-        "happinessChange": 0,
-        "wealthChange": 0
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": 1,
+          "max": 5
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
       }
     },
     {
       "question": "Your roof is leaking, but a festival is in town. Do you fix the roof?",
       "yesOutcome": {
-        "survivalChange": 15,
-        "happinessChange": -10,
-        "wealthChange": -15
+        "survivalChange": {
+          "min": 10,
+          "max": 20
+        },
+        "happinessChange": {
+          "min": -15,
+          "max": -5
+        },
+        "wealthChange": {
+          "min": -20,
+          "max": -10
+        }
       },
       "noOutcome": {
-        "survivalChange": -10,
-        "happinessChange": 15,
-        "wealthChange": 0
+        "survivalChange": {
+          "min": -15,
+          "max": -5
+        },
+        "happinessChange": {
+          "min": 10,
+          "max": 20
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
       }
     }
   ]
