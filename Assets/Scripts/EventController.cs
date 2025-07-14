@@ -1,7 +1,22 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic; // Required for using Lists
+using System.IO;                  // Required for file operations
 
+/// <summary>
+/// A helper class that matches the structure of our JSON file.
+/// It contains a list of events.
+/// </summary>
+[System.Serializable]
+public class EventList
+{
+    public List<Event> events;
+}
+
+/// <summary>
+/// Defines a single game event, including the question and the outcomes for each choice.
+/// This is a data container, so it doesn't need to be a MonoBehaviour.
+/// [System.Serializable] allows us to see and edit this in the Unity Inspector and use it with JSON.
+/// </summary>
 [System.Serializable]
 public class Event
 {
@@ -16,27 +31,73 @@ public class Event
     public Player.StatChange noOutcome;
 }
 
+/// <summary>
+/// Manages the list of all possible game events. It now loads them from a JSON file
+/// and provides a random event to the GameManager when requested.
+/// </summary>
 public class EventController : MonoBehaviour
 {
     // --- ATTRIBUTES ---
-    [Header("Event List")]
-    [Tooltip("The list of all possible events that can occur in the game.")]
-    public List<Event> allEvents;
+    [Header("Data Loading")]
+    [Tooltip("The name of the JSON file in the StreamingAssets folder.")]
+    public string jsonFileName = "events.json";
+
+    // This list will now be populated from the JSON file instead of the Inspector.
+    private List<Event> allEvents;
 
     private Event currentEvent;
+
+    // --- UNITY LIFECYCLE ---
+
+    /// <summary>
+    /// Awake is called when the script instance is being loaded.
+    /// We use this to load our data before the game starts.
+    /// </summary>
+    void Awake()
+    {
+        LoadEventsFromJSON();
+    }
 
     // --- METHODS ---
 
     /// <summary>
+    /// Reads the specified JSON file from the StreamingAssets folder,
+    /// parses it, and populates the allEvents list.
+    /// </summary>
+    private void LoadEventsFromJSON()
+    {
+        // Construct the full path to the file.
+        string path = Path.Combine(Application.streamingAssetsPath, jsonFileName);
+
+        if (File.Exists(path))
+        {
+            // Read the entire file into a string.
+            string jsonString = File.ReadAllText(path);
+
+            // Deserialize the JSON string into our EventList object.
+            EventList eventData = JsonUtility.FromJson<EventList>(jsonString);
+
+            // Assign the loaded events to our list.
+            allEvents = eventData.events;
+            Debug.Log(allEvents.Count + " events loaded successfully from JSON.");
+        }
+        else
+        {
+            Debug.LogError("Cannot find JSON file at: " + path);
+            allEvents = new List<Event>(); // Initialize with an empty list to prevent errors.
+        }
+    }
+
+    /// <summary>
     /// Selects a random event from the 'allEvents' list.
     /// It ensures that the same event isn't picked twice in a row if there are multiple options.
-    /// </summary>
+    /// </-summary>
     /// <returns>A random Event object.</returns>
     public Event GetRandomEvent()
     {
-        if (allEvents.Count == 0)
+        if (allEvents == null || allEvents.Count == 0)
         {
-            Debug.LogError("Event list is empty! Cannot get a random event.");
+            Debug.LogError("Event list is empty! Cannot get a random event. Was the JSON loaded correctly?");
             return null;
         }
 
@@ -54,22 +115,5 @@ public class EventController : MonoBehaviour
 
         currentEvent = newEvent;
         return currentEvent;
-    }
-
-
-    // --- UNITY LIFECYCLE (for testing) ---
-
-    // Example of how you can test this script.
-    // Press the 'G' key to get a random event and print its question to the console.
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            Event randomEvent = GetRandomEvent();
-            if (randomEvent != null)
-            {
-                Debug.Log("New Random Event: " + randomEvent.question);
-            }
-        }
     }
 }

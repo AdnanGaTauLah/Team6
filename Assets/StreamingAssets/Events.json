@@ -1,0 +1,56 @@
+{
+  "events": [
+    {
+      "question": "A traveling merchant offers you a mysterious, glowing potion. Do you buy it?",
+      "yesOutcome": {
+        "survivalChange": 10,
+        "happinessChange": 5,
+        "wealthChange": -20
+      },
+      "noOutcome": {
+        "survivalChange": 0,
+        "happinessChange": -5,
+        "wealthChange": 0
+      }
+    },
+    {
+      "question": "You find a lost puppy on the side of the road. Do you spend the day looking for its owner?",
+      "yesOutcome": {
+        "survivalChange": -5,
+        "happinessChange": 15,
+        "wealthChange": 0
+      },
+      "noOutcome": {
+        "survivalChange": 0,
+        "happinessChange": -10,
+        "wealthChange": 0
+      }
+    },
+    {
+      "question": "A shady figure offers you a 'guaranteed' investment tip. Do you trust them with your savings?",
+      "yesOutcome": {
+        "survivalChange": 0,
+        "happinessChange": 25,
+        "wealthChange": 50
+      },
+      "noOutcome": {
+        "survivalChange": 0,
+        "happinessChange": 0,
+        "wealthChange": 0
+      }
+    },
+    {
+      "question": "Your roof is leaking, but a festival is in town. Do you fix the roof?",
+      "yesOutcome": {
+        "survivalChange": 15,
+        "happinessChange": -10,
+        "wealthChange": -15
+      },
+      "noOutcome": {
+        "survivalChange": -10,
+        "happinessChange": 15,
+        "wealthChange": 0
+      }
+    }
+  ]
+}
