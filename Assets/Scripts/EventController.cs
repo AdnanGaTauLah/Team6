@@ -32,6 +32,7 @@ public struct EventOutcome
 [System.Serializable]
 public class GameEvent
 {
+    public string type;
     public string question;
     public EventOutcome yesOutcome;
     public EventOutcome noOutcome;
@@ -46,6 +47,25 @@ public class GameEventList
     public List<GameEvent> events;
 }
 
+/// <summary>
+/// Represents a single component(item, food, or activity)
+/// loaded from the components JSON file.
+/// </summary>
+[System.Serializable]
+public class ComponentQuestion
+{
+    public string type;
+    public string name;
+}
+
+///<summary>
+/// containing a list of all possible components.
+/// </summary>
+[System.Serializable]
+public class ComponentQuestionList
+{
+    public List<ComponentQuestion> components;
+}
 
 /// <summary>
 /// Manages loading the list of all possible game events from a JSON file.
@@ -60,10 +80,14 @@ public class EventController : MonoBehaviour
     private List<GameEvent> allEvents;
     private List<GameEvent> eventsUsedThisDay = new List<GameEvent>();
 
+    public string detailFileJson= "components.json";
+    private List<ComponentQuestion> detailQuestions;
+
     // --- UNITY LIFECYCLE ---
     void Awake()
     {
         LoadEventsFromJSON();
+        LoadDetailFromJSON();
     }
 
     // --- METHODS ---
@@ -82,6 +106,24 @@ public class EventController : MonoBehaviour
         {
             Debug.LogError("Cannot find JSON file at: " + path);
             allEvents = new List<GameEvent>();
+        }
+    }
+
+    void LoadDetailFromJSON()
+    {
+        string path = Path.Combine(Application.streamingAssetsPath, detailFileJson);
+
+        if (File.Exists(path))
+        {
+            string jsonString = File.ReadAllText(path);
+            ComponentQuestionList detailData = JsonUtility.FromJson<ComponentQuestionList>(jsonString);
+            detailQuestions = detailData.components;
+            Debug.Log(detailQuestions.Count + " details loaded successfully from JSON.");
+        }
+        else
+        {
+            Debug.LogError("Cannot find details JSON file at: " + path);
+            detailQuestions = new List<ComponentQuestion>();
         }
     }
 
@@ -105,7 +147,16 @@ public class EventController : MonoBehaviour
         } while (eventsUsedThisDay.Contains(newEvent)); // Keep picking until we find one not used today
 
         eventsUsedThisDay.Add(newEvent); // Add the new event to the list of used events for this day
-        return newEvent;
+
+        //Check type event,  apply detail if event.type != "unique"
+        if (newEvent.type != "unique")
+        {
+            return GenerateRandomQuestion(newEvent);
+        }
+        else
+        {
+            return newEvent;
+        }
     }
 
     /// <summary>
@@ -114,5 +165,24 @@ public class EventController : MonoBehaviour
     public void StartNewDay()
     {
         eventsUsedThisDay.Clear();
+    }
+
+    /// <summary>
+    /// Makes a copy of the event, replaces {component} with random detail based on type.
+    /// </summary>
+    public GameEvent GenerateRandomQuestion(GameEvent ge)
+    {
+        List<ComponentQuestion> matchingDetails = detailQuestions.FindAll(e => e.type == ge.type);
+        if(matchingDetails != null && matchingDetails.Count > 0)
+        {
+            ComponentQuestion randomComponent = matchingDetails[Random.Range(0, matchingDetails.Count)];
+            ge.question= ge.question.Replace("{component}", randomComponent.name);
+            return ge;
+        }
+        else
+        {
+            Debug.LogWarning("No matching components found for type: " + ge.type);
+            return ge;
+        }
     }
 }

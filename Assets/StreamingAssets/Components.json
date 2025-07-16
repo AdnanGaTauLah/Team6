@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+        "type":"item",
+        "name":"potion"
+    },
+    {
+        "type":"item",
+        "name":"Totem"
+    },
+    {
+        "type":"food",
+        "name":"rice"
+    },
+    {
+        "type":"food",
+        "name":"egg"
+    },
+    {
+        "type":"activity",
+        "name":"football"
+    },
+    {
+        "type":"activity",
+        "name":"hiking"
+    }
+  ]
+}

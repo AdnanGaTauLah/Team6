@@ -1,7 +1,8 @@
 {
   "events": [
     {
-      "question": "A traveling merchant offers you a mysterious, glowing potion. Do you buy it?",
+      "type":"item",
+      "question": "A traveling merchant offers you a mysterious, {component}. Do you buy it?",
       "yesOutcome": {
         "survivalChange": {
           "min": 5,
@@ -32,6 +33,7 @@
       }
     },
     {
+      "type":"unique",
       "question": "You find a lost puppy on the side of the road. Do you spend the day looking for its owner?",
       "yesOutcome": {
         "survivalChange": {
@@ -63,6 +65,7 @@
       }
     },
     {
+      "type":"unique",
       "question": "A shady figure offers you a 'guaranteed' investment tip. Do you trust them with your savings?",
       "yesOutcome": {
         "survivalChange": {
@@ -94,7 +97,40 @@
       }
     },
     {
-      "question": "Your roof is leaking, but a festival is in town. Do you fix the roof?",
+       "type":"food",
+      "question": "A vendor at the market offers you some delicious-looking food ({component}). Do you buy some to eat?",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 10,
+          "max": 20
+        },
+        "happinessChange": {
+          "min": -15,
+          "max": -5
+        },
+        "wealthChange": {
+          "min": -20,
+          "max": -10
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": -15,
+          "max": -5
+        },
+        "happinessChange": {
+          "min": 10,
+          "max": 20
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    },
+    {
+       "type":"activity",
+      "question": "Someone offers you the chance to join in a {component}. Do you go with them?",
       "yesOutcome": {
         "survivalChange": {
           "min": 10,
