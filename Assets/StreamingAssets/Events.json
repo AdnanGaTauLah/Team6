@@ -1,30 +1,29 @@
 {
   "events": [
     {
-      "type":"item",
-      "question": "A traveling merchant offers you a mysterious, {component}. Do you buy it?",
+      "question": "Ibu mau ke pasar membeli bahan buat masak, boleh minta uang?",
       "yesOutcome": {
         "survivalChange": {
           "min": 5,
           "max": 15
         },
         "happinessChange": {
-          "min": 2,
-          "max": 8
+          "min": 0,
+          "max": 0
         },
         "wealthChange": {
-          "min": -25,
-          "max": -15
+          "min": -15,
+          "max": -5
         }
       },
       "noOutcome": {
         "survivalChange": {
-          "min": 0,
-          "max": 0
+          "min": -10,
+          "max": -5
         },
         "happinessChange": {
-          "min": -7,
-          "max": -3
+          "min": 0,
+          "max": 0
         },
         "wealthChange": {
           "min": 0,
@@ -33,8 +32,7 @@
       }
     },
     {
-      "type":"unique",
-      "question": "You find a lost puppy on the side of the road. Do you spend the day looking for its owner?",
+      "question": "Barang ini sepertinya tidak terpakai, jual saja?",
       "yesOutcome": {
         "survivalChange": {
           "min": -10,
@@ -65,8 +63,7 @@
       }
     },
     {
-      "type":"unique",
-      "question": "A shady figure offers you a 'guaranteed' investment tip. Do you trust them with your savings?",
+      "question": "Perabotan kita ada yang rusak, panggil tukang servis?",
       "yesOutcome": {
         "survivalChange": {
           "min": 0,
@@ -97,8 +94,7 @@
       }
     },
     {
-       "type":"food",
-      "question": "A vendor at the market offers you some delicious-looking food ({component}). Do you buy some to eat?",
+      "question": "Ini hasil dari ngojek hari ini",
       "yesOutcome": {
         "survivalChange": {
           "min": 10,
@@ -129,8 +125,7 @@
       }
     },
     {
-       "type":"activity",
-      "question": "Someone offers you the chance to join in a {component}. Do you go with them?",
+      "question": "Bosen di rumah terus, liburan yuk?",
       "yesOutcome": {
         "survivalChange": {
           "min": 10,
