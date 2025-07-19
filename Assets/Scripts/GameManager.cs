@@ -5,132 +5,165 @@ using UnityEngine.InputSystem;
 public class GameManager : MonoBehaviour
 {
     // --- EVENTS (The Observer Pattern) ---
-    // These are the "broadcasts" other scripts can listen to.
-    public static event Action<int> OnDayChanged;
-    public static event Action<Player> OnStatsUpdated;
-    public static event Action<GameEvent> OnNewEvent;
-    public static event Action OnGameOver;
-    public static event Action<bool> OnChoiceMade;
 
-    // --- REFERENCES ---
+    /// <summary>
+    /// Broadcasts when a new day begins. The integer payload is the new day number.
+    /// </summary>
+    public static event Action<int> OnDayChanged;
+
+    /// <summary>
+    /// Broadcasts whenever the player's stats have been modified. The payload is the Player object itself.
+    /// </summary>
+    public static event Action<Player> OnStatsUpdated;
+
+    /// <summary>
+    /// Broadcasts when a new event/question has been selected and is ready to be displayed.
+    /// </summary>
+    public static event Action<GameEvent> OnNewEvent;
+
+    /// <summary>
+    /// Broadcasts when the game's lose condition has been met.
+    /// </summary>
+    public static event Action OnGameOver;
+
+    /// <summary>
+    /// A private event used internally to trigger the choice logic.
+    /// This is invoked by both keyboard input and UI button presses.
+    /// </summary>
+    private event Action<bool> OnChoiceMade;
+
+
     [Header("Component References")]
+    [Tooltip("A reference to the Player script in the scene.")]
     public Player player;
+
+    [Tooltip("A reference to the EventController script in the scene.")]
     public EventController eventController;
 
+    // FIX: Added the missing public reference for the UIManager.
+    [Tooltip("A reference to the UIManager script in the scene.")]
+    public UIManager uiManager;
+
     [Header("Game Configuration")]
+    [Tooltip("The number of questions the player must answer before a day ends.")]
     public int questionsPerDay = 3;
 
-    // --- INPUT ---
+    // --- Private Fields ---
     private PlayerControls gameControls;
-
-    // --- GAME STATE ---
     private GameEvent currentEvent;
-    private bool isGameOver = false;
-
-    // --- Day Cycle State ---
     private int currentDay = 1;
     private int questionsAnsweredToday = 0;
+    private bool isGameOver = false;
 
-    // --- UNITY LIFECYCLE ---
+    /// <summary>
+    /// Called when the script instance is being loaded. Used for initialization.
+    /// </summary>
     void Awake()
     {
         gameControls = new PlayerControls();
-
-        if (player == null || eventController == null)
+        // FIX: Added a check for the uiManager reference.
+        if (player == null || eventController == null || uiManager == null)
         {
-            Debug.LogError("GameManager is missing references! Assign Player and EventController in the Inspector.");
+            Debug.LogError("GameManager is missing one or more references! Assign Player, EventController, and UIManager in the Inspector.");
             this.enabled = false;
         }
     }
 
+    /// <summary>
+    /// Called when the object becomes enabled and active. Used to subscribe to events.
+    /// </summary>
     private void OnEnable()
     {
-        // Listen to its own internal event
         OnChoiceMade += MakeChoice;
 
         gameControls.Gameplay.Enable();
-        // We keep keyboard controls for quick testing
-        gameControls.Gameplay.ChooseYes.performed += OnChooseYes;
-        gameControls.Gameplay.ChooseNo.performed += OnChooseNo;
+        gameControls.Gameplay.ChooseYes.performed += ReportChoiceFromInput;
+        gameControls.Gameplay.ChooseNo.performed += ReportChoiceFromInput;
 
-        // Listen for choices coming from the UI's new event
         UIManager.OnChoiceButtonPressed += ReportChoice;
     }
 
+    /// <summary>
+    /// Called when the object becomes disabled or inactive. Used to unsubscribe from events to prevent memory leaks.
+    /// </summary>
     private void OnDisable()
     {
         OnChoiceMade -= MakeChoice;
 
-        gameControls.Gameplay.ChooseYes.performed -= OnChooseYes;
-        gameControls.Gameplay.ChooseNo.performed -= OnChooseNo;
-        
-        OnChoiceMade -= MakeChoice;
         gameControls.Gameplay.Disable();
+        gameControls.Gameplay.ChooseYes.performed -= ReportChoiceFromInput;
+        gameControls.Gameplay.ChooseNo.performed -= ReportChoiceFromInput;
 
-        // Stop listening for UI events
         UIManager.OnChoiceButtonPressed -= ReportChoice;
     }
 
-    void Start()
-    {
-        StartGame();
-    }
+    /// <summary>
+    /// Called on the frame when a script is enabled just before any of the Update methods are called the first time.
+    /// </summary>
+    void Start() => StartGame();
 
     // --- Input Handling ---
+
+    /// <summary>
+    /// Receives the callback from the Input System (keyboard/gamepad) and determines the choice.
+    /// </summary>
+    /// <param name="context">The context provided by the Input Action.</param>
     private void ReportChoiceFromInput(InputAction.CallbackContext context)
     {
-        // This method handles the context from the Input System
         bool choice = context.action == gameControls.Gameplay.ChooseYes;
         ReportChoice(choice);
     }
 
+    /// <summary>
+    /// A universal method that receives a choice from any source (keyboard or UI) and invokes the internal game logic event.
+    /// </summary>
+    /// <param name="choice">True if the player chose 'Yes', false if 'No'.</param>
     private void ReportChoice(bool choice)
     {
-        // This single method is called by either keyboard OR UI events
-        // It then invokes the private event that the game logic listens to
         OnChoiceMade?.Invoke(choice);
     }
-    // Input handlers now just fire the event
-    private void OnChooseYes(InputAction.CallbackContext context) => OnChoiceMade?.Invoke(true);
-    private void OnChooseNo(InputAction.CallbackContext context) => OnChoiceMade?.Invoke(false);
 
-    // --- CORE GAME LOGIC ---
+
+    // --- Core Game Logic ---
+
+    /// <summary>
+    /// Initializes the game state and starts the first day.
+    /// </summary>
     private void StartGame()
     {
-        Debug.Log("Game Started!");
         isGameOver = false;
         currentDay = 1;
         questionsAnsweredToday = 0;
-
-        // Broadcast the initial state
         OnStatsUpdated?.Invoke(player);
-
         BeginNewDay();
     }
 
     /// <summary>
-    /// Sets up the start of a new day.
+    /// Sets up the start of a new day and broadcasts the relevant events.
     /// </summary>
     private void BeginNewDay()
     {
-        Debug.Log("--- Starting Day " + currentDay + " ---");
         OnDayChanged?.Invoke(currentDay);
-        eventController.StartNewDay(); // Reset the list of used events
+        eventController.StartNewDay();
         SelectNewEvent();
     }
 
+    /// <summary>
+    /// Fetches a new unique event from the EventController and broadcasts it.
+    /// </summary>
     private void SelectNewEvent()
     {
         currentEvent = eventController.GetUniqueEventForDay();
-        OnNewEvent?.Invoke(currentEvent); // Broadcast the new event
+        OnNewEvent?.Invoke(currentEvent);
     }
 
     /// <summary>
-    /// Processes the player's choice, randomizes the outcome, and applies it.
+    /// The main logic handler for a player's choice. Calculates outcomes and advances the game state.
     /// </summary>
-    public void MakeChoice(bool choseYes)
+    /// <param name="choseYes">The choice made by the player.</param>
+    private void MakeChoice(bool choseYes)
     {
-        if (isGameOver) return;
+        if (isGameOver || currentEvent == null) return;
 
         EventOutcome outcomeWithRanges = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
         Player.StatChange finalOutcome = new Player.StatChange();
@@ -141,24 +174,15 @@ public class GameManager : MonoBehaviour
 
         player.UpdateStats(finalOutcome);
 
-        // Broadcast that stats have been updated
         OnStatsUpdated?.Invoke(player);
 
-        CheckForGameOver();
-
-        // --- New Day Logic ---
         questionsAnsweredToday++;
-        Debug.Log("Answered question " + questionsAnsweredToday + " of " + questionsPerDay);
 
         if (questionsAnsweredToday >= questionsPerDay)
         {
-            // End of the day, check for game over
-            Debug.Log("End of day. Checking for game over.");
             CheckForGameOver();
-
             if (!isGameOver)
             {
-                // If not game over, start the next day
                 currentDay++;
                 questionsAnsweredToday = 0;
                 BeginNewDay();
@@ -166,17 +190,19 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // It's not the end of the day, just get the next question
             SelectNewEvent();
         }
     }
 
+    /// <summary>
+    /// Checks if any player stat has fallen below zero, ending the game if necessary.
+    /// </summary>
     private void CheckForGameOver()
     {
         if (player.Survival < 0 || player.Happiness < 0 || player.Wealth < 0)
         {
             isGameOver = true;
-            OnGameOver?.Invoke(); // Broadcast that the game is over
+            OnGameOver?.Invoke();
         }
     }
 }

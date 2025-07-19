@@ -7,6 +7,11 @@ using System;
 
 public class UIManager : MonoBehaviour
 {
+    /// <summary>
+    /// A public event that this UIManager broadcasts when a choice button is pressed.
+    /// The GameManager listens for this event to receive input from the UI.
+    /// The boolean payload is true for 'Yes' and false for 'No'.
+    /// </summary>
     public static event Action<bool> OnChoiceButtonPressed;
 
     [Header("UI Panels")]
@@ -15,109 +20,97 @@ public class UIManager : MonoBehaviour
     [Tooltip("The panel that is shown when the game ends.")]
     [SerializeField] private GameObject gameOverPanel;
 
-
-    [Header("Stat Displays")]
-    [SerializeField] private TextMeshProUGUI survivalText;
-    [SerializeField] private TextMeshProUGUI happinessText;
-    [SerializeField] private TextMeshProUGUI wealthText;
-
-    [Header("Event Display")]
+    [Header("Display Elements")]
+    [Tooltip("The TextMeshPro element used to display the current day.")]
     [SerializeField] private TextMeshProUGUI dayText;
+    [Tooltip("The TextMeshPro element used to display the player's Survival stat.")]
+    [SerializeField] private TextMeshProUGUI survivalText;
+    [Tooltip("The TextMeshPro element used to display the player's Happiness stat.")]
+    [SerializeField] private TextMeshProUGUI happinessText;
+    [Tooltip("The TextMeshPro element used to display the player's Wealth stat.")]
+    [SerializeField] private TextMeshProUGUI wealthText;
+    [Tooltip("The TextMeshPro element used to display the current event's question.")]
     [SerializeField] private TextMeshProUGUI questionText;
+    [Tooltip("The button for the 'Yes' choice.")]
     [SerializeField] private Button yesButton;
+    [Tooltip("The button for the 'No' choice.")]
     [SerializeField] private Button noButton;
 
-    // --- Subscribing to Events ---
+    /// <summary>
+    /// Subscribes to all relevant events from the GameManager when this component is enabled.
+    /// </summary>
     private void OnEnable()
     {
-        // Start listening for broadcasts from the GameManager
         GameManager.OnDayChanged += UpdateDayDisplay;
         GameManager.OnStatsUpdated += UpdateStatsDisplay;
         GameManager.OnNewEvent += DisplayEvent;
         GameManager.OnGameOver += ShowGameOverScreen;
     }
 
-    // --- Unsubscribing from Events ---
+    /// <summary>
+    /// Unsubscribes from all events when this component is disabled to prevent errors and memory leaks.
+    /// </summary>
     private void OnDisable()
     {
-        // Stop listening when this object is disabled to prevent errors
         GameManager.OnDayChanged -= UpdateDayDisplay;
         GameManager.OnStatsUpdated -= UpdateStatsDisplay;
         GameManager.OnNewEvent -= DisplayEvent;
         GameManager.OnGameOver -= ShowGameOverScreen;
     }
 
+    /// <summary>
+    /// Called on the frame when a script is enabled just before any of the Update methods are called the first time.
+    /// Sets up the initial button listeners.
+    /// </summary>
     void Start()
     {
-        // The UIManager now fires an event instead of calling the GameManager directly
+        // FIX: This ensures the UIManager fires its OWN event instead of trying to call a private method in another class.
         yesButton.onClick.AddListener(() => OnChoiceButtonPressed?.Invoke(true));
         noButton.onClick.AddListener(() => OnChoiceButtonPressed?.Invoke(false));
 
         HideGameOverScreen();
     }
 
-    /// <summary>
-    /// Updates the Day counter text.
-    /// </summary>
-    public void UpdateDayDisplay(int day)
-    {
-        if (dayText != null)
-        {
-            dayText.text = "Day: " + day;
-        }
-    }
+    // --- Event Handler Methods ---
 
     /// <summary>
-    /// Updates the text elements that display the player's current stats.
+    /// A callback method that is triggered by the GameManager's OnDayChanged event.
     /// </summary>
-    public void UpdateStatsDisplay(Player player)
+    /// <param name="day">The current day number.</param>
+    private void UpdateDayDisplay(int day) => dayText.text = "Day: " + day;
+
+    /// <summary>
+    /// A callback method triggered by the GameManager's OnStatsUpdated event. Updates all stat displays.
+    /// </summary>
+    /// <param name="player">The player object containing the latest stats.</param>
+    private void UpdateStatsDisplay(Player player)
     {
-        if (player == null) return;
         survivalText.text = "Survival: " + player.Survival;
         happinessText.text = "Happiness: " + player.Happiness;
         wealthText.text = "Wealth: " + player.Wealth;
     }
 
     /// <summary>
-    /// Displays the question for the current event.
+    /// A callback method triggered by the GameManager's OnNewEvent event. Displays the new question.
     /// </summary>
-    public void DisplayEvent(GameEvent gameEvent)
+    /// <param name="gameEvent">The event object containing the question text.</param>
+    private void DisplayEvent(GameEvent gameEvent) => questionText.text = gameEvent.question;
+
+    /// <summary>
+    /// A callback method triggered by the GameManager's OnGameOver event. Hides the gameplay UI and shows the game over panel.
+    /// </summary>
+    private void ShowGameOverScreen()
     {
-        if (gameEvent == null) return;
-        questionText.text = gameEvent.question;
+        gameplayPanel.SetActive(false);
+        gameOverPanel.SetActive(true);
     }
 
     /// <summary>
-    /// Shows the Game Over screen and hides the main gameplay UI.
+    /// Hides the Game Over panel and shows the main gameplay UI. Used for initialization.
     /// </summary>
-    public void ShowGameOverScreen()
+    private void HideGameOverScreen()
     {
-        gameplayPanel.SetActive(false); // Hide the gameplay UI
-        gameOverPanel.SetActive(true);  // Show the game over screen
-    }
-
-    /// <summary>
-    /// Hides the Game Over panel and shows the main gameplay UI.
-    /// This is used to set the initial state of the game.
-    /// </summary>
-    public void HideGameOverScreen()
-    {
-        gameplayPanel.SetActive(true);  // Show the gameplay UI
-        gameOverPanel.SetActive(false); // Hide the game over screen
-    }
-
-    /// <summary>
-    /// Connects the UI buttons to the GameManager's logic.
-    /// This is called once at the start of the game.
-    /// </summary>
-    public void SetupButtonListeners(GameManager gameManager)
-    {
-        // Clear any previous listeners to be safe
-        yesButton.onClick.RemoveAllListeners();
-        noButton.onClick.RemoveAllListeners();
-
-        // Add new listeners that call the MakeChoice method in the GameManager
-        yesButton.onClick.AddListener(() => gameManager.MakeChoice(true));
-        noButton.onClick.AddListener(() => gameManager.MakeChoice(false));
+        gameplayPanel.SetActive(true);
+        gameOverPanel.SetActive(false);
     }
 }
