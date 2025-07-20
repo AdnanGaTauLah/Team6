@@ -60,6 +60,8 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void Awake()
     {
+        //Test debug select Character
+        Debug.Log(SelectCharacter.selectedCharacter);
         gameControls = new PlayerControls();
         // FIX: Added a check for the uiManager reference.
         if (player == null || eventController == null || uiManager == null)
