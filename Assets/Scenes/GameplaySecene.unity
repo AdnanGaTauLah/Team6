@@ -2672,6 +2672,7 @@ MonoBehaviour:
   eventController: {fileID: 1434046771}
   uiManager: {fileID: 706486546}
   questionsPerDay: 3
+  goals: 280000003c00000050000000
 --- !u!4 &2133588986
 Transform:
   m_ObjectHideFlags: 0

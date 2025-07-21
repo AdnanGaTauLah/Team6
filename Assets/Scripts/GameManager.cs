@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
@@ -54,7 +55,9 @@ public class GameManager : MonoBehaviour
     private int currentDay = 1;
     private int questionsAnsweredToday = 0;
     private bool isGameOver = false;
+    private int week = 1;
 
+    public List<int> goals;
     /// <summary>
     /// Called when the script instance is being loaded. Used for initialization.
     /// </summary>
@@ -181,12 +184,12 @@ public class GameManager : MonoBehaviour
         if (questionsAnsweredToday >= questionsPerDay)
         {
             CheckForGameOver();
-            if (!isGameOver)
+            /*if (!isGameOver)
             {
                 currentDay++;
                 questionsAnsweredToday = 0;
                 BeginNewDay();
-            }
+            }*/
         }
         else
         {
@@ -199,10 +202,33 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void CheckForGameOver()
     {
-        if (player.Survival < 0 || player.Happiness < 0 || player.Wealth < 0)
+        
+        if (currentDay < 7)
         {
-            isGameOver = true;
-            OnGameOver?.Invoke();
+            if (player.Survival <= 0 || player.Happiness <= 0)
+            {
+                GameOver();
+             
+            }
+            currentDay++;
+            BeginNewDay();
         }
+        else
+        {
+            if (player.Wealth < goals[week-1])
+            {
+                GameOver();
+            }
+            week++;
+            currentDay = 1;
+            BeginNewDay();
+        }
+    }
+
+    private void GameOver()
+    {
+        Debug.Log("Game Over");
+        isGameOver = true;
+        OnGameOver?.Invoke();
     }
 }
