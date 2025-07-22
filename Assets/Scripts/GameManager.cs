@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
@@ -46,7 +47,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Game Configuration")]
     [Tooltip("The number of questions the player must answer before a day ends.")]
-    public int questionsPerDay = 3;
+    public int questionsPerDay = 1;
 
     // --- Private Fields ---
     private PlayerControls gameControls;
@@ -54,6 +55,10 @@ public class GameManager : MonoBehaviour
     private int currentDay = 1;
     private int questionsAnsweredToday = 0;
     private bool isGameOver = false;
+    private int week = 1;
+
+    
+    public List<int> goals=new List<int>();
 
     /// <summary>
     /// Called when the script instance is being loaded. Used for initialization.
@@ -183,7 +188,6 @@ public class GameManager : MonoBehaviour
             CheckForGameOver();
             if (!isGameOver)
             {
-                currentDay++;
                 questionsAnsweredToday = 0;
                 BeginNewDay();
             }
@@ -199,10 +203,43 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void CheckForGameOver()
     {
-        if (player.Survival < 0 || player.Happiness < 0 || player.Wealth < 0)
+        if (week < goals.Count)
         {
-            isGameOver = true;
-            OnGameOver?.Invoke();
+            if (currentDay < 7)
+            {
+                if (player.Survival <= 0 || player.Happiness <= 0)
+                {
+                    GameOver();
+                }
+                else
+                {
+                    currentDay++;
+                }
+            }
+            else
+            {
+                if (player.Wealth < goals[week] || player.Survival <= 0 || player.Happiness <= 0)
+                {
+                    GameOver();
+                }
+                else
+                {
+                    currentDay = 1;
+                    week = 2;
+                }
+            }
         }
+        else
+        {
+            Debug.Log("Player menang");
+            GameOver();
+        }
+        
+    }
+
+    private void GameOver()
+    {
+        isGameOver = true;
+        OnGameOver?.Invoke();
     }
 }
