@@ -26,7 +26,6 @@ public class UIManager : MonoBehaviour
 
     private void OnEnable()
     {
-        // REFACTOR: Subscribe to the new OnGameStarted event for initial setup.
         GameManager.OnGameStarted += SetInitialUIState;
         GameManager.OnDayChanged += UpdateDayDisplay;
         GameManager.OnStatsUpdated += UpdateStatsDisplay;
@@ -36,7 +35,6 @@ public class UIManager : MonoBehaviour
 
     private void OnDisable()
     {
-        // REFACTOR: Unsubscribe from the OnGameStarted event.
         GameManager.OnGameStarted -= SetInitialUIState;
         GameManager.OnDayChanged -= UpdateDayDisplay;
         GameManager.OnStatsUpdated -= UpdateStatsDisplay;
