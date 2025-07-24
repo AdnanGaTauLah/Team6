@@ -2671,7 +2671,8 @@ MonoBehaviour:
   player: {fileID: 857473655}
   eventController: {fileID: 1434046771}
   uiManager: {fileID: 706486546}
-  questionsPerDay: 3
+  questionsPerDay: 1
+  goals: 320000006400000096000000
 --- !u!4 &2133588986
 Transform:
   m_ObjectHideFlags: 0

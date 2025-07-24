@@ -55,7 +55,7 @@ public class GameManager : MonoBehaviour
     private int currentDay = 1;
     private int questionsAnsweredToday = 0;
     private bool isGameOver = false;
-    private int week = 1;
+    private int week = 0;
 
     
     public List<int> goals=new List<int>();
