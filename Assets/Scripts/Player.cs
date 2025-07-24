@@ -4,30 +4,38 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    // --- ATTRIBUTES ---
-    // These are public so you can see and edit their starting values in the Unity Inspector.
+    /// <summary>
+    /// Defines the possible mentor figures the player can choose.
+    /// This enum is what the CharacterSpawner script is looking for.
+    /// </summary>
+    public enum MentorFigure
+    {
+        None,
+        Father,
+        Mother
+    }
+
+    // --- PRIVATE FIELDS ---
     [Header("Player Resources")]
     [Tooltip("Represents the player's health and physical well-being. Game over if this drops below 0.")]
     [SerializeField] private int _survival = 50;
-
     [Tooltip("Represents the player's mental state and joy. Game over if this drops below 0.")]
     [SerializeField] private int _happiness = 50;
-
     [Tooltip("Represents the player's financial resources. Game over if this drops below 0.")]
-    [SerializeField] private int _wealth = 50;
+    [SerializeField] public int _wealth = 50;
 
-    // --- PUBLIC PROPERTIES (The "Getters") ---
-    // We expose the data through public "properties" that can only be read, not set, from the outside.
-    // This is the public-facing, safe way to access the stats.
+    // This field will store the choice made in the menu.
+    private MentorFigure _chosenMentor = MentorFigure.None;
+
+    // --- PUBLIC PROPERTIES (Getters) ---
     public int Survival => _survival;
     public int Happiness => _happiness;
     public int Wealth => _wealth;
+    public MentorFigure ChosenMentor => _chosenMentor;
 
-    // --- METHODS ---
 
     /// <summary>
-    /// A simple data structure to hold the changes for each stat.
-    /// This makes it easy to pass around the consequences of a player's choice.
+    /// A simple data structure used to pass stat modifications between scripts.
     /// </summary>
     [System.Serializable]
     public struct StatChange
@@ -38,8 +46,7 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Updates the player's stats based on the outcome of an event choice.
-    /// This method will be called by the GameManager after the player makes a decision.
+    /// The sole public method for modifying the player's stats.
     /// </summary>
     /// <param name="outcome">A StatChange object containing the values to add to the current stats.</param>
     public void UpdateStats(StatChange outcome)
@@ -47,29 +54,16 @@ public class Player : MonoBehaviour
         _survival += outcome.survivalChange;
         _happiness += outcome.happinessChange;
         _wealth += outcome.wealthChange;
-
-        // Optional: You can add logging to see the changes in the console for debugging.
-        Debug.Log($"Stats Updated: Survival={Survival}, Happiness={Happiness}, Wealth={Wealth}");
     }
 
-    // --- UNITY LIFECYCLE (for testing) ---
-
-    // Example of how you might test this script in the editor.
-    // You can press the 'U' key to simulate an event outcome.
-    void Update()
+    /// <summary>
+    /// Sets the chosen mentor figure for the player. This is called by the GameManager
+    /// after the player is spawned.
+    /// </summary>
+    /// <param name="mentor">The mentor figure chosen by the player.</param>
+    public void SetMentor(MentorFigure mentor)
     {
-        if (Input.GetKeyDown(KeyCode.U))
-        {
-            // Create a sample outcome for testing purposes.
-            StatChange testOutcome = new StatChange
-            {
-                survivalChange = -5,
-                happinessChange = 10,
-                wealthChange = -2
-            };
-
-            // Call the UpdateStats method
-            UpdateStats(testOutcome);
-        }
+        _chosenMentor = mentor;
+        Debug.Log("Mentor has been set to: " + mentor);
     }
 }

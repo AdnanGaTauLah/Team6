@@ -3,194 +3,152 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
+/// <summary>
+/// The central controller and "brain" of the game. This version is fully decoupled
+/// from the UIManager and communicates only through events.
+/// </summary>
 public class GameManager : MonoBehaviour
 {
     // --- EVENTS (The Observer Pattern) ---
 
     /// <summary>
-    /// Broadcasts when a new day begins. The integer payload is the new day number.
+    /// FIX: Added the missing event. This broadcasts once when the game logic officially begins.
     /// </summary>
+    public static event Action OnGameStarted;
+
     public static event Action<int> OnDayChanged;
-
-    /// <summary>
-    /// Broadcasts whenever the player's stats have been modified. The payload is the Player object itself.
-    /// </summary>
     public static event Action<Player> OnStatsUpdated;
-
-    /// <summary>
-    /// Broadcasts when a new event/question has been selected and is ready to be displayed.
-    /// </summary>
     public static event Action<GameEvent> OnNewEvent;
-
-    /// <summary>
-    /// Broadcasts when the game's lose condition has been met.
-    /// </summary>
     public static event Action OnGameOver;
-
-    /// <summary>
-    /// A private event used internally to trigger the choice logic.
-    /// This is invoked by both keyboard input and UI button presses.
-    /// </summary>
     private event Action<bool> OnChoiceMade;
+    public static event Action<int> OnWeekChanged;
 
 
     [Header("Component References")]
-    [Tooltip("A reference to the Player script in the scene.")]
-    public Player player;
-
-    [Tooltip("A reference to the EventController script in the scene.")]
     public EventController eventController;
-
-    // FIX: Added the missing public reference for the UIManager.
-    [Tooltip("A reference to the UIManager script in the scene.")]
+    // The direct reference to UIManager is no longer needed for a pure observer pattern.
+    // However, since your current file has it, I will leave it but it is unused for initialization.
     public UIManager uiManager;
 
     [Header("Game Configuration")]
     [Tooltip("The number of questions the player must answer before a day ends.")]
     public int questionsPerDay = 1;
 
-    // --- Private Fields ---
+    private Player player;
     private PlayerControls gameControls;
     private GameEvent currentEvent;
     private int currentDay = 1;
     private int questionsAnsweredToday = 0;
-    private bool isGameOver = false;
     private int week = 0;
 
-    
-    public List<int> goals=new List<int>();
+    //Goal
+    [System.Serializable]
+    public class Goal
+    {
+        public string type;
+        public string narasi;
+        public int value;
+    }
+    public List<Goal> goals;
 
-    /// <summary>
-    /// Called when the script instance is being loaded. Used for initialization.
-    /// </summary>
+    private bool isGameReady = false;
+
+
     void Awake()
     {
         gameControls = new PlayerControls();
-        // FIX: Added a check for the uiManager reference.
-        if (player == null || eventController == null || uiManager == null)
+        if (eventController == null || uiManager == null) // uiManager check kept for other potential uses
         {
-            Debug.LogError("GameManager is missing one or more references! Assign Player, EventController, and UIManager in the Inspector.");
+            Debug.LogError("GameManager is missing EventController or UIManager reference!");
             this.enabled = false;
         }
     }
 
-    /// <summary>
-    /// Called when the object becomes enabled and active. Used to subscribe to events.
-    /// </summary>
     private void OnEnable()
     {
+        CharacterSpawner.OnPlayerSpawned += InitializePlayer;
         OnChoiceMade += MakeChoice;
-
         gameControls.Gameplay.Enable();
         gameControls.Gameplay.ChooseYes.performed += ReportChoiceFromInput;
         gameControls.Gameplay.ChooseNo.performed += ReportChoiceFromInput;
-
         UIManager.OnChoiceButtonPressed += ReportChoice;
     }
 
-    /// <summary>
-    /// Called when the object becomes disabled or inactive. Used to unsubscribe from events to prevent memory leaks.
-    /// </summary>
     private void OnDisable()
     {
+        CharacterSpawner.OnPlayerSpawned -= InitializePlayer;
         OnChoiceMade -= MakeChoice;
-
         gameControls.Gameplay.Disable();
         gameControls.Gameplay.ChooseYes.performed -= ReportChoiceFromInput;
         gameControls.Gameplay.ChooseNo.performed -= ReportChoiceFromInput;
-
         UIManager.OnChoiceButtonPressed -= ReportChoice;
     }
 
-    /// <summary>
-    /// Called on the frame when a script is enabled just before any of the Update methods are called the first time.
-    /// </summary>
-    void Start() => StartGame();
+    private void InitializePlayer(Player spawnedPlayer)
+    {
+        this.player = spawnedPlayer;
+        Debug.Log("GameManager has received the player reference: " + spawnedPlayer.name);
+        StartGame();
+    }
 
-    // --- Input Handling ---
-
-    /// <summary>
-    /// Receives the callback from the Input System (keyboard/gamepad) and determines the choice.
-    /// </summary>
-    /// <param name="context">The context provided by the Input Action.</param>
     private void ReportChoiceFromInput(InputAction.CallbackContext context)
     {
         bool choice = context.action == gameControls.Gameplay.ChooseYes;
         ReportChoice(choice);
     }
 
-    /// <summary>
-    /// A universal method that receives a choice from any source (keyboard or UI) and invokes the internal game logic event.
-    /// </summary>
-    /// <param name="choice">True if the player chose 'Yes', false if 'No'.</param>
-    private void ReportChoice(bool choice)
-    {
-        OnChoiceMade?.Invoke(choice);
-    }
+    private void ReportChoice(bool choice) => OnChoiceMade?.Invoke(choice);
 
-
-    // --- Core Game Logic ---
-
-    /// <summary>
-    /// Initializes the game state and starts the first day.
-    /// </summary>
     private void StartGame()
     {
-        isGameOver = false;
+        isGameReady = true;
         currentDay = 1;
         questionsAnsweredToday = 0;
+
+        // FIX: Instead of a direct call to the UIManager, broadcast the OnGameStarted event.
+        // The UIManager is listening for this and will set its own initial state.
+        OnGameStarted?.Invoke();
+
         OnStatsUpdated?.Invoke(player);
         BeginNewDay();
     }
 
-    /// <summary>
-    /// Sets up the start of a new day and broadcasts the relevant events.
-    /// </summary>
     private void BeginNewDay()
     {
+        if (!isGameReady) return;
         OnDayChanged?.Invoke(currentDay);
+        OnWeekChanged?.Invoke(week);
         eventController.StartNewDay();
         SelectNewEvent();
     }
 
-    /// <summary>
-    /// Fetches a new unique event from the EventController and broadcasts it.
-    /// </summary>
     private void SelectNewEvent()
     {
+        if (!isGameReady) return;
         currentEvent = eventController.GetUniqueEventForDay();
         OnNewEvent?.Invoke(currentEvent);
     }
 
-    /// <summary>
-    /// The main logic handler for a player's choice. Calculates outcomes and advances the game state.
-    /// </summary>
-    /// <param name="choseYes">The choice made by the player.</param>
     private void MakeChoice(bool choseYes)
     {
-        if (isGameOver || currentEvent == null) return;
+        if (!isGameReady || currentEvent == null) return;
 
         EventOutcome outcomeWithRanges = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
         Player.StatChange finalOutcome = new Player.StatChange();
-
         finalOutcome.survivalChange = UnityEngine.Random.Range(outcomeWithRanges.survivalChange.min, outcomeWithRanges.survivalChange.max + 1);
         finalOutcome.happinessChange = UnityEngine.Random.Range(outcomeWithRanges.happinessChange.min, outcomeWithRanges.happinessChange.max + 1);
         finalOutcome.wealthChange = UnityEngine.Random.Range(outcomeWithRanges.wealthChange.min, outcomeWithRanges.wealthChange.max + 1);
-
         player.UpdateStats(finalOutcome);
-
         OnStatsUpdated?.Invoke(player);
-
         questionsAnsweredToday++;
 
         if (questionsAnsweredToday >= questionsPerDay)
         {
             CheckForGameOver();
-            if (!isGameOver)
-            {
-                questionsAnsweredToday = 0;
-                BeginNewDay();
-            }
+            if (!isGameReady) return;
+            currentDay++;
+            questionsAnsweredToday = 0;
+            BeginNewDay();
         }
         else
         {
@@ -198,48 +156,59 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Checks if any player stat has fallen below zero, ending the game if necessary.
-    /// </summary>
     private void CheckForGameOver()
     {
-        if (week < goals.Count)
+        if (!isGameReady) return;
+        //Check Day and Week
+        if(currentDay%7 != 0)
         {
-            if (currentDay < 7)
+            if (player.Survival <= 0 || player.Happiness <= 0)
             {
-                if (player.Survival <= 0 || player.Happiness <= 0)
-                {
-                    GameOver();
-                }
-                else
-                {
-                    currentDay++;
-                }
-            }
-            else
-            {
-                if (player.Wealth < goals[week] || player.Survival <= 0 || player.Happiness <= 0)
-                {
-                    GameOver();
-                }
-                else
-                {
-                    currentDay = 1;
-                    week = 2;
-                }
+                GameOver();
             }
         }
         else
         {
-            Debug.Log("Player menang");
-            GameOver();
+            if (player.Wealth <= 0 || player.Survival <= 0 || player.Happiness <= 0)
+            {
+                GameOver();
+            }
+            else
+            {
+                CheckGoal(goals[week]);
+            }
         }
         
     }
 
+    private void CheckGoal(Goal goal)
+    {
+        /*switch (goal.type)
+        {
+            case "wealth":
+                if (goal.value <= player.Wealth)
+                {
+                    GameOver();
+                }
+                else
+                {
+                    
+                }
+                return
+            case "happy":
+                return currentHp >= goal.value;
+
+            case "survival":
+                return currentHappy >= goal.value;
+
+            default:
+                return false;
+        }*/
+    }
+
     private void GameOver()
     {
-        isGameOver = true;
+        isGameReady = false;
         OnGameOver?.Invoke();
     }
 }

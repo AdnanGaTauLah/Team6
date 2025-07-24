@@ -1,11 +1,12 @@
 {
   "events": [
     {
-      "question": "Ibu mau ke pasar membeli bahan buat masak, boleh minta uang?",
+      "type": "belanja kebutuhan",
+      "question": "Ibu mau ke pasar membeli bahan buat masak, boleh minta uang {component}?",
       "yesOutcome": {
         "survivalChange": {
-          "min": 5,
-          "max": 15
+          "min": 10,
+          "max": 10
         },
         "happinessChange": {
           "min": 0,
@@ -32,6 +33,7 @@
       }
     },
     {
+      "type": "unique",
       "question": "Barang ini sepertinya tidak terpakai, jual saja?",
       "yesOutcome": {
         "survivalChange": {

@@ -1,12 +1,12 @@
 {
   "components": [
     {
-        "type":"item",
-        "name":"potion"
+        "type":"belanja kebutuhan",
+        "name":"beras"
     },
     {
-        "type":"item",
-        "name":"Totem"
+        "type":"belanja kebutuhan",
+        "name":"minyak goreng"
     },
     {
         "type":"food",
