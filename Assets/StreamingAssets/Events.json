@@ -301,8 +301,8 @@
           "max": 0
         },
         "wealthChange": {
-          "min": -10,
-          "max": -10
+          "min": -5,
+          "max": -5
         }
       },
       "noOutcome": {
@@ -315,8 +315,8 @@
           "max": 0
         },
         "wealthChange": {
-          "min": -10,
-          "max": -10
+          "min": -5,
+          "max": -5
         }
       }
     },
@@ -371,16 +371,16 @@
       },
       "noOutcome": {
         "survivalChange": {
-          "min": -10,
-          "max": -10
+          "min": -5,
+          "max": -5
         },
         "happinessChange": {
-          "min": -10,
-          "max": -10
+          "min": -5,
+          "max": -5
         },
         "wealthChange": {
-          "min": -10,
-          "max": -10
+          "min": 0,
+          "max": 0
         }
       }
     }
