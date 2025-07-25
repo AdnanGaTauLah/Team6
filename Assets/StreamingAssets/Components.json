@@ -1,28 +1,116 @@
 {
   "components": [
     {
-        "type":"item",
-        "name":"potion"
+      "type": "Belanja kebutuhan",
+      "name": "Beras"
     },
     {
-        "type":"item",
-        "name":"Totem"
+      "type": "Belanja kebutuhan",
+      "name": "Air"
     },
     {
-        "type":"food",
-        "name":"rice"
+      "type": "Belanja kebutuhan",
+      "name": "Listrik"
     },
     {
-        "type":"food",
-        "name":"egg"
+      "type": "Biaya kesehatan",
+      "name": "Ibu"
     },
     {
-        "type":"activity",
-        "name":"football"
+      "type": "Biaya kesehatan",
+      "name": "Ayah"
     },
     {
-        "type":"activity",
-        "name":"hiking"
+      "type": "Biaya kesehatan",
+      "name": "Anakmu"
+    },
+    {
+      "type": "Jual barang hiburan",
+      "name": "kipas angin"
+    },
+    {
+      "type": "Jual barang hiburan",
+      "name": "TV"
+    },
+    {
+      "type": "Jual barang hiburan",
+      "name": "blender"
+    },
+    {
+      "type": "Barang kebutuhan rusak",
+      "name": "motor"
+    },
+    {
+      "type": "Barang kebutuhan rusak",
+      "name": "magic jar"
+    },
+    {
+      "type": "Barang kebutuhan rusak",
+      "name": "kompor"
+    },
+    {
+      "type": "Barang hiburan rusak",
+      "name": "TV tabung"
+    },
+    {
+      "type": "Barang hiburan rusak",
+      "name": "Mainan"
+    },
+    {
+      "type": "Hiburan anak",
+      "name": "boneka"
+    },
+    {
+      "type": "Hiburan anak",
+      "name": "mainan"
+    },
+    {
+      "type": "Hiburan anak",
+      "name": "jajan"
+    },
+    {
+      "type": "Hiburan anak",
+      "name": "baju baru"
+    },
+    {
+      "type": "Hiburan keluarga",
+      "name": "speaker bekas"
+    },
+    {
+      "type": "Hiburan keluarga",
+      "name": "TV bekas"
+    },
+    {
+      "type": "Hiburan keluarga",
+      "name": "radio"
+    },
+    {
+      "type": "Barang gratis",
+      "name": "HP"
+    },
+    {
+      "type": "Barang gratis",
+      "name": "laptop"
+    },
+    {
+      "type": "Barang gratis",
+      "name": "TV"
+    },
+    {
+      "type": "Barang gratis",
+      "name": "baju"
+    },
+    {
+      "type": "Perbaikan rumah",
+      "name": "genteng bocor"
+    },
+    {
+      "type": "Perbaikan rumah",
+      "name": "jendela pecah"
+    },
+    {
+      "type": "Perbaikan rumah",
+      "name": "kerusakan pompa air"
     }
   ]
 }
