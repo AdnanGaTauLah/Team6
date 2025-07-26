@@ -53,7 +53,9 @@ public class GameManager : MonoBehaviour
         public int value;
     }
     public List<Goal> goals;
-    public bool isStartEvent = false;
+    public static bool isStartEvent = false; //for check start event
+    public static bool isEndDay= false; //for check if you can end the day
+    public static bool isEventRunning = false;
 
     private bool isGameReady = false;
 
@@ -109,10 +111,6 @@ public class GameManager : MonoBehaviour
         currentDay = 1;
         questionsAnsweredToday = 0;
         currentGoal = week % goals.Count;
-        Debug.Log("Minggu Ke- " + week);
-        Debug.Log("Goal Minggu ke- " + currentGoal);
-        Debug.Log("Narasi Goal: " + goals[currentGoal].narasi);
-        Debug.Log("Goal: " + goals[currentGoal].value);
         // FIX: Instead of a direct call to the UIManager, broadcast the OnGameStarted event.
         // The UIManager is listening for this and will set its own initial state.
         OnGameStarted?.Invoke();
@@ -133,6 +131,7 @@ public class GameManager : MonoBehaviour
         }
         eventController.StartNewDay();
         SelectNewEvent();
+        uiManager.DisplayQuestion(isStartEvent);
     }
 
     private void SelectNewEvent()
@@ -140,34 +139,49 @@ public class GameManager : MonoBehaviour
         if (!isGameReady) return;
         currentEvent = eventController.GetUniqueEventForDay();
         OnNewEvent?.Invoke(currentEvent);
+        
     }
 
     private void MakeChoice(bool choseYes)
     {
         if (!isGameReady || currentEvent == null) return;
-        //if (!isStartEvent) return;
+        if (!isStartEvent) return;
 
         EventOutcome outcomeWithRanges = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
-        Player.StatChange finalOutcome = new Player.StatChange();
+        /*Player.StatChange finalOutcome = new Player.StatChange();
         finalOutcome.survivalChange = UnityEngine.Random.Range(outcomeWithRanges.survivalChange.min, outcomeWithRanges.survivalChange.max + 1);
         finalOutcome.happinessChange = UnityEngine.Random.Range(outcomeWithRanges.happinessChange.min, outcomeWithRanges.happinessChange.max + 1);
         finalOutcome.wealthChange = UnityEngine.Random.Range(outcomeWithRanges.wealthChange.min, outcomeWithRanges.wealthChange.max + 1);
         player.UpdateStats(finalOutcome);
-        OnStatsUpdated?.Invoke(player);
+        OnStatsUpdated?.Invoke(player);*/
+        int survivalChange = UnityEngine.Random.Range(outcomeWithRanges.survivalChange.min, outcomeWithRanges.survivalChange.max + 1);
+        int happinessChange = UnityEngine.Random.Range(outcomeWithRanges.happinessChange.min, outcomeWithRanges.happinessChange.max + 1);
+        int wealthChange = UnityEngine.Random.Range(outcomeWithRanges.wealthChange.min, outcomeWithRanges.wealthChange.max + 1);
+        ChangePlayerState(survivalChange, happinessChange, wealthChange);
         questionsAnsweredToday++;
 
         if (questionsAnsweredToday >= questionsPerDay)
         {
             CheckForGameOver();
             if (!isGameReady) return;
-            currentDay++;
-            questionsAnsweredToday = 0;
-            BeginNewDay();
         }
         else
         {
             SelectNewEvent();
         }
+        isStartEvent = false;
+        isEndDay = true;
+        uiManager.DisplayQuestion(isStartEvent);
+
+    }
+
+    public void StartEvent()
+    {
+        currentDay++;
+        questionsAnsweredToday = 0;
+        isStartEvent = true;
+        isEndDay = false;
+        BeginNewDay();
     }
 
     private void CheckForGameOver()
@@ -196,10 +210,6 @@ public class GameManager : MonoBehaviour
                     week++;
                     currentGoal = week % goals.Count;
                 }
-                Debug.Log("Minggu Ke- " + week);
-                Debug.Log("Goal Minggu ke- " + currentGoal);
-                Debug.Log("Narasi Goal: " + goals[currentGoal].narasi);
-                Debug.Log("Goal: " + goals[currentGoal].value);
             }
         }
         
@@ -212,12 +222,7 @@ public class GameManager : MonoBehaviour
             case "wealth":
                 if (player.Wealth >= goal.value)
                 {
-                    Player.StatChange finalOutcome = new Player.StatChange();
-                    finalOutcome.survivalChange = 0;
-                    finalOutcome.happinessChange = 0;
-                    finalOutcome.wealthChange = -goal.value;
-                    player.UpdateStats(finalOutcome);
-                    OnStatsUpdated?.Invoke(player);
+                    ChangePlayerState(0, 0, -goal.value);
                     return true;
                 }
                 break;
@@ -245,5 +250,15 @@ public class GameManager : MonoBehaviour
     {
         isGameReady = false;
         OnGameOver?.Invoke();
+    }
+
+    public void ChangePlayerState(int survival,int happiness,int wealth)
+    {
+        Player.StatChange finalOutcome = new Player.StatChange();
+        finalOutcome.survivalChange = survival;
+        finalOutcome.happinessChange = happiness;
+        finalOutcome.wealthChange = wealth;
+        player.UpdateStats(finalOutcome);
+        OnStatsUpdated?.Invoke(player);
     }
 }
