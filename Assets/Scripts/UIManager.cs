@@ -14,6 +14,8 @@ public class UIManager : MonoBehaviour
     [Header("UI Panels")]
     [SerializeField] private GameObject gameplayPanel;
     [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private GameObject goalUI;
+    [SerializeField] private GameObject questionUI;
 
     [Header("Display Elements")]
     [SerializeField] private TextMeshProUGUI dayText;
@@ -24,6 +26,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI questionText;
     [SerializeField] private Button yesButton;
     [SerializeField] private Button noButton;
+    [SerializeField] private TextMeshProUGUI goalText;
 
     private void OnEnable()
     {
@@ -33,6 +36,7 @@ public class UIManager : MonoBehaviour
         GameManager.OnNewEvent += DisplayEvent;
         GameManager.OnGameOver += ShowGameOverScreen;
         GameManager.OnWeekChanged += UpdateWeekDisplay;
+        GameManager.DisplayGoal += ShowGoal;
     }
 
     private void OnDisable()
@@ -43,6 +47,7 @@ public class UIManager : MonoBehaviour
         GameManager.OnNewEvent -= DisplayEvent;
         GameManager.OnGameOver -= ShowGameOverScreen;
         GameManager.OnWeekChanged -= UpdateWeekDisplay;
+        GameManager.DisplayGoal += ShowGoal;
     }
 
     void Start()
@@ -116,4 +121,17 @@ public class UIManager : MonoBehaviour
             gameOverPanel.SetActive(true);
         }
     }
+
+    private void ShowGoal(GameManager.Goal goal)
+    {
+        goalText.text = goal.narasi.Replace("{value}", goal.value.ToString());
+        goalUI.SetActive(true);
+        
+    }
+
+    public void CloseGoalButton()
+    {
+        goalUI.SetActive(false);
+    }
+
 }

@@ -22,6 +22,7 @@ public class GameManager : MonoBehaviour
     public static event Action OnGameOver;
     private event Action<bool> OnChoiceMade;
     public static event Action<int> OnWeekChanged;
+    public static event Action<Goal> DisplayGoal;
 
 
     [Header("Component References")]
@@ -40,6 +41,8 @@ public class GameManager : MonoBehaviour
     private int currentDay = 1;
     private int questionsAnsweredToday = 0;
     private int week = 0;
+    private int previousWeek = -1;
+    private int currentGoal = 0;
 
     //Goal
     [System.Serializable]
@@ -50,6 +53,7 @@ public class GameManager : MonoBehaviour
         public int value;
     }
     public List<Goal> goals;
+    public bool isStartEvent = false;
 
     private bool isGameReady = false;
 
@@ -104,7 +108,11 @@ public class GameManager : MonoBehaviour
         isGameReady = true;
         currentDay = 1;
         questionsAnsweredToday = 0;
-
+        currentGoal = week % goals.Count;
+        Debug.Log("Minggu Ke- " + week);
+        Debug.Log("Goal Minggu ke- " + currentGoal);
+        Debug.Log("Narasi Goal: " + goals[currentGoal].narasi);
+        Debug.Log("Goal: " + goals[currentGoal].value);
         // FIX: Instead of a direct call to the UIManager, broadcast the OnGameStarted event.
         // The UIManager is listening for this and will set its own initial state.
         OnGameStarted?.Invoke();
@@ -117,7 +125,12 @@ public class GameManager : MonoBehaviour
     {
         if (!isGameReady) return;
         OnDayChanged?.Invoke(currentDay);
-        OnWeekChanged?.Invoke(week);
+        if (week != previousWeek)
+        {
+            OnWeekChanged?.Invoke(week);
+            DisplayGoal?.Invoke(goals[currentGoal]);
+            previousWeek = week;
+        }
         eventController.StartNewDay();
         SelectNewEvent();
     }
@@ -132,6 +145,7 @@ public class GameManager : MonoBehaviour
     private void MakeChoice(bool choseYes)
     {
         if (!isGameReady || currentEvent == null) return;
+        //if (!isStartEvent) return;
 
         EventOutcome outcomeWithRanges = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
         Player.StatChange finalOutcome = new Player.StatChange();
@@ -175,35 +189,56 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                CheckGoal(goals[week]);
+                bool success=CheckGoal(goals[currentGoal]);
+                if (success)
+                {
+                    goals[currentGoal].value += 5;
+                    week++;
+                    currentGoal = week % goals.Count;
+                }
+                Debug.Log("Minggu Ke- " + week);
+                Debug.Log("Goal Minggu ke- " + currentGoal);
+                Debug.Log("Narasi Goal: " + goals[currentGoal].narasi);
+                Debug.Log("Goal: " + goals[currentGoal].value);
             }
         }
         
     }
 
-    private void CheckGoal(Goal goal)
+    private bool CheckGoal(Goal goal)
     {
-        /*switch (goal.type)
+        switch (goal.type.ToLower())
         {
             case "wealth":
-                if (goal.value <= player.Wealth)
+                if (player.Wealth >= goal.value)
                 {
-                    GameOver();
+                    Player.StatChange finalOutcome = new Player.StatChange();
+                    finalOutcome.survivalChange = 0;
+                    finalOutcome.happinessChange = 0;
+                    finalOutcome.wealthChange = -goal.value;
+                    player.UpdateStats(finalOutcome);
+                    OnStatsUpdated?.Invoke(player);
+                    return true;
                 }
-                else
+                break;
+            case "happiness":
+                if (player.Happiness > goal.value)
                 {
-                    
+                    return true;
                 }
-                return
-            case "happy":
-                return currentHp >= goal.value;
-
+                break;
             case "survival":
-                return currentHappy >= goal.value;
-
+                if(player.Survival> goal.value)
+                {
+                    return true;
+                }
+                break;
             default:
-                return false;
-        }*/
+                Debug.Log("Unknown goal type: " + goal.type);
+                break;
+        }
+        GameOver();
+        return false;
     }
 
     private void GameOver()
