@@ -1,49 +1,55 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// The central controller and "brain" of the game. This version is fully decoupled
-/// from the UIManager and communicates only through events.
-/// </summary>
+// A new, simple data structure to hold the results of a day.
+// This is cleaner than passing three separate integers in an event.
+public struct DaySummaryData
+{
+    public int survivalChange;
+    public int happinessChange;
+    public int wealthChange;
+}
 public class GameManager : MonoBehaviour
 {
-    // --- EVENTS (The Observer Pattern) ---
-
-    /// <summary>
-    /// FIX: Added the missing event. This broadcasts once when the game logic officially begins.
-    /// </summary>
+    // --- Events ---
+    public static event Action OnEventConcluded;
+    public static event Action<DaySummaryData> OnDayEndSummary;
     public static event Action OnGameStarted;
-
     public static event Action<int> OnDayChanged;
     public static event Action<Player> OnStatsUpdated;
     public static event Action<GameEvent> OnNewEvent;
     public static event Action OnGameOver;
     private event Action<bool> OnChoiceMade;
 
-
     [Header("Component References")]
     public EventController eventController;
-    // The direct reference to UIManager is no longer needed for a pure observer pattern.
-    // However, since your current file has it, I will leave it but it is unused for initialization.
-    public UIManager uiManager;
 
     [Header("Game Configuration")]
-    public int questionsPerDay = 3;
+    public int questionsPerDay = 1;
+    [Tooltip("The delay in seconds before showing a new event question.")]
+    public float eventDelay = 1.5f;
 
+    // --- Private Fields ---
     private Player player;
     private PlayerControls gameControls;
     private GameEvent currentEvent;
     private int currentDay = 1;
     private int questionsAnsweredToday = 0;
     private bool isGameReady = false;
+    private bool isWaitingForSummary;
+    private int survivalAtDayStart, happinessAtDayStart, wealthAtDayStart;
+
+    // NEW: A flag to control the coroutine's waiting state.
+    private bool isWaitingForChoice = false;
 
     void Awake()
     {
         gameControls = new PlayerControls();
-        if (eventController == null || uiManager == null) // uiManager check kept for other potential uses
+        if (eventController == null)
         {
-            Debug.LogError("GameManager is missing EventController or UIManager reference!");
+            Debug.LogError("GameManager is missing a reference to the EventController!");
             this.enabled = false;
         }
     }
@@ -56,6 +62,7 @@ public class GameManager : MonoBehaviour
         gameControls.Gameplay.ChooseYes.performed += ReportChoiceFromInput;
         gameControls.Gameplay.ChooseNo.performed += ReportChoiceFromInput;
         UIManager.OnChoiceButtonPressed += ReportChoice;
+        UIManager.OnSummaryAcknowledged += EndDaySequence;
     }
 
     private void OnDisable()
@@ -66,21 +73,16 @@ public class GameManager : MonoBehaviour
         gameControls.Gameplay.ChooseYes.performed -= ReportChoiceFromInput;
         gameControls.Gameplay.ChooseNo.performed -= ReportChoiceFromInput;
         UIManager.OnChoiceButtonPressed -= ReportChoice;
+        UIManager.OnSummaryAcknowledged -= EndDaySequence;
     }
 
     private void InitializePlayer(Player spawnedPlayer)
     {
         this.player = spawnedPlayer;
-        Debug.Log("GameManager has received the player reference: " + spawnedPlayer.name);
         StartGame();
     }
 
-    private void ReportChoiceFromInput(InputAction.CallbackContext context)
-    {
-        bool choice = context.action == gameControls.Gameplay.ChooseYes;
-        ReportChoice(choice);
-    }
-
+    private void ReportChoiceFromInput(InputAction.CallbackContext context) => ReportChoice(context.action == gameControls.Gameplay.ChooseYes);
     private void ReportChoice(bool choice) => OnChoiceMade?.Invoke(choice);
 
     private void StartGame()
@@ -88,61 +90,92 @@ public class GameManager : MonoBehaviour
         isGameReady = true;
         currentDay = 1;
         questionsAnsweredToday = 0;
-
-        // FIX: Instead of a direct call to the UIManager, broadcast the OnGameStarted event.
-        // The UIManager is listening for this and will set its own initial state.
         OnGameStarted?.Invoke();
-
-        OnStatsUpdated?.Invoke(player);
         BeginNewDay();
     }
 
     private void BeginNewDay()
     {
-        if (!isGameReady) return;
         OnDayChanged?.Invoke(currentDay);
         eventController.StartNewDay();
-        SelectNewEvent();
+
+        survivalAtDayStart = player.Survival;
+        happinessAtDayStart = player.Happiness;
+        wealthAtDayStart = player.Wealth;
+
+        OnStatsUpdated?.Invoke(player);
+
+        StartCoroutine(DailyEventRoutine());
     }
 
-    private void SelectNewEvent()
+    /// <summary>
+    /// This coroutine manages the sequence of presenting questions for a single day.
+    /// </summary>
+    private IEnumerator DailyEventRoutine()
     {
-        if (!isGameReady) return;
-        currentEvent = eventController.GetUniqueEventForDay();
-        OnNewEvent?.Invoke(currentEvent);
+        while (questionsAnsweredToday < questionsPerDay)
+        {
+            yield return new WaitForSeconds(eventDelay);
+
+            currentEvent = eventController.GetUniqueEventForDay();
+            OnNewEvent?.Invoke(currentEvent);
+
+            // --- FIX: Wait for a choice ---
+            // 1. Set the flag to indicate we are now waiting.
+            isWaitingForChoice = true;
+            // 2. Pause the coroutine until the flag is set back to false (by MakeChoice).
+            yield return new WaitUntil(() => !isWaitingForChoice);
+        }
+
+        isWaitingForSummary = true;
+        DaySummaryData summary = new DaySummaryData
+        {
+            survivalChange = player.Survival - survivalAtDayStart,
+            happinessChange = player.Happiness - happinessAtDayStart,
+            wealthChange = player.Wealth - wealthAtDayStart
+        };
+        OnDayEndSummary?.Invoke(summary);
     }
+
 
     private void MakeChoice(bool choseYes)
     {
-        if (!isGameReady || currentEvent == null) return;
+        // FIX: Add a check to ensure we only process a choice when we are waiting for one.
+        if (!isGameReady || isWaitingForSummary || currentEvent == null || !isWaitingForChoice) return;
 
         EventOutcome outcomeWithRanges = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
         Player.StatChange finalOutcome = new Player.StatChange();
         finalOutcome.survivalChange = UnityEngine.Random.Range(outcomeWithRanges.survivalChange.min, outcomeWithRanges.survivalChange.max + 1);
         finalOutcome.happinessChange = UnityEngine.Random.Range(outcomeWithRanges.happinessChange.min, outcomeWithRanges.happinessChange.max + 1);
         finalOutcome.wealthChange = UnityEngine.Random.Range(outcomeWithRanges.wealthChange.min, outcomeWithRanges.wealthChange.max + 1);
+
         player.UpdateStats(finalOutcome);
         OnStatsUpdated?.Invoke(player);
+
+        OnEventConcluded?.Invoke();
+
         questionsAnsweredToday++;
 
-        if (questionsAnsweredToday >= questionsPerDay)
+        // FIX: Un-pause the coroutine by setting the flag to false.
+        isWaitingForChoice = false;
+    }
+
+    private void EndDaySequence()
+    {
+        isWaitingForSummary = false;
+        CheckForGameOver();
+
+        if (isGameReady)
         {
-            CheckForGameOver();
-            if (!isGameReady) return;
             currentDay++;
             questionsAnsweredToday = 0;
             BeginNewDay();
-        }
-        else
-        {
-            SelectNewEvent();
         }
     }
 
     private void CheckForGameOver()
     {
-        if (!isGameReady) return;
-        if (player.Survival < 0 || player.Happiness < 0 || player.Wealth < 0)
+        if (player.Survival <= 0 || player.Happiness <= 0)
         {
             isGameReady = false;
             OnGameOver?.Invoke();
