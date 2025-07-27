@@ -9,6 +9,8 @@ using System.Collections;
 /// </summary>
 public class UIManager : MonoBehaviour
 {
+    // --- UI Events ---
+    public static event Action OnSummaryAcknowledged;
     public static event Action<bool> OnChoiceButtonPressed;
     public GameManager gameManager;
     public WorkEvent workEvent;
@@ -22,9 +24,20 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject questionUI;
     [SerializeField] private GameObject splashScreen;
     [SerializeField] private GameObject endDayEventUI;
-    
+    [SerializeField] private GameObject daySummaryPanel;
 
-    [Header("Display Elements")]
+    // NEW: A specific reference to the panel containing the question and buttons.
+    [Tooltip("The child panel that holds the event question and Yes/No buttons.")]
+    [SerializeField] private GameObject eventQuestionPanel;
+
+    [Header("Day Summary Elements")]
+    [SerializeField] private TextMeshProUGUI summaryTitleText;
+    [SerializeField] private TextMeshProUGUI summarySurvivalText;
+    [SerializeField] private TextMeshProUGUI summaryHappinessText;
+    [SerializeField] private TextMeshProUGUI summaryWealthText;
+    [SerializeField] private Button summaryContinueButton;
+
+    [Header("Gameplay Display Elements")]
     [SerializeField] private TextMeshProUGUI dayText;
     [SerializeField] private TextMeshProUGUI weekText;
     [SerializeField] private TextMeshProUGUI survivalText;
@@ -37,8 +50,11 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI goalText;
     [SerializeField] private TextMeshProUGUI splashText;
 
+    private int currentDay;
+
     private void OnEnable()
     {
+        GameManager.OnDayEndSummary += ShowDaySummary;
         GameManager.OnGameStarted += SetInitialUIState;
         GameManager.OnDayChanged += UpdateDayDisplay;
         GameManager.OnStatsUpdated += UpdateStatsDisplay;
@@ -46,10 +62,14 @@ public class UIManager : MonoBehaviour
         GameManager.OnGameOver += ShowGameOverScreen;
         GameManager.OnWeekChanged += UpdateWeekDisplay;
         GameManager.DisplayGoal += ShowGoal;
+
+        // NEW: Subscribe to the new event from the GameManager.
+        GameManager.OnEventConcluded += HideEventPanel;
     }
 
     private void OnDisable()
     {
+        GameManager.OnDayEndSummary -= ShowDaySummary;
         GameManager.OnGameStarted -= SetInitialUIState;
         GameManager.OnDayChanged -= UpdateDayDisplay;
         GameManager.OnStatsUpdated -= UpdateStatsDisplay;
@@ -57,6 +77,9 @@ public class UIManager : MonoBehaviour
         GameManager.OnGameOver -= ShowGameOverScreen;
         GameManager.OnWeekChanged -= UpdateWeekDisplay;
         GameManager.DisplayGoal += ShowGoal;
+
+        // NEW: Unsubscribe from the event to prevent memory leaks.
+        GameManager.OnEventConcluded -= HideEventPanel;
     }
 
     void Start()
@@ -66,31 +89,44 @@ public class UIManager : MonoBehaviour
         endDayEventUI.SetActive(false);
         goalUI.SetActive(false);
         splashScreen.SetActive(false);
+        summaryContinueButton.onClick.AddListener(() => OnSummaryAcknowledged?.Invoke());
     }
 
-    // --- Event Handler Methods ---
-
-    /// <summary>
-    /// A callback method triggered by the GameManager's OnGameStarted event.
-    /// Sets the UI to its correct initial state.
-    /// </summary>
     private void SetInitialUIState()
     {
-        if (gameplayPanel != null)
+        gameplayPanel.SetActive(true);
+        gameOverPanel.SetActive(false);
+        daySummaryPanel.SetActive(false);
+
+        // Ensure the event panel is hidden at the very start.
+        eventQuestionPanel.SetActive(false);
+    }
+
+    private void ShowDaySummary(DaySummaryData summary)
+    {
+        if (summaryTitleText != null)
         {
-            gameplayPanel.SetActive(true);
+            summaryTitleText.text = $"Hari ke-{currentDay} sudah berakhir";
         }
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(false);
-        }
+
+        // Using color tags to make the summary more readable.
+        summarySurvivalText.text = $"Survival: <color={(summary.survivalChange >= 0 ? "green" : "red")}>{summary.survivalChange:+#;-#;0}</color>";
+        summaryHappinessText.text = $"Happiness: <color={(summary.happinessChange >= 0 ? "green" : "red")}>{summary.happinessChange:+#;-#;0}</color>";
+        summaryWealthText.text = $"Wealth: <color={(summary.wealthChange >= 0 ? "green" : "red")}>{summary.wealthChange:+#;-#;0}</color>";
+
+        gameplayPanel.SetActive(false);
+        daySummaryPanel.SetActive(true);
     }
 
     private void UpdateDayDisplay(int day)
     {
-        if (dayText != null)
+        currentDay = day;
+        dayText.text = $"Day: {day}";
+
+        if (daySummaryPanel.activeSelf)
         {
-            dayText.text = $"Day: {day}";
+            daySummaryPanel.SetActive(false);
+            gameplayPanel.SetActive(true);
         }
        
     }
@@ -114,24 +150,31 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// REFACTORED: This now shows the specific question panel.
+    /// </summary>
     private void DisplayEvent(GameEvent gameEvent)
     {
         if (gameEvent != null)
         {
             questionText.text = gameEvent.question;
+            eventQuestionPanel.SetActive(true);
         }
+    }
+
+    /// <summary>
+    /// NEW: This method is called by the OnEventConcluded event from the GameManager.
+    /// </summary>
+    private void HideEventPanel()
+    {
+        eventQuestionPanel.SetActive(false);
     }
 
     private void ShowGameOverScreen()
     {
-        if (gameplayPanel != null)
-        {
-            gameplayPanel.SetActive(false);
-        }
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(true);
-        }
+        gameplayPanel.SetActive(false);
+        daySummaryPanel.SetActive(false);
+        gameOverPanel.SetActive(true);
     }
 
     private void ShowGoal(GameManager.Goal goal)
@@ -159,7 +202,8 @@ public class UIManager : MonoBehaviour
     {
         GameManager.isStartEvent = true;
         goalUI.SetActive(false);
-        DisplayQuestion(true);
+        gameManager.BeginNewDay();
+        //DisplayQuestion(true);
     }
 
     public void DisplayEndDayEvent(string textEvent)
@@ -206,8 +250,9 @@ public class UIManager : MonoBehaviour
 
        
         yield return new WaitForSeconds(1.5f);
+        GameManager.isEndDay = false;
         splashScreen.SetActive(false);
-        gameManager.StartEvent();
+        //gameManager.StartEvent();
     }
 
 
