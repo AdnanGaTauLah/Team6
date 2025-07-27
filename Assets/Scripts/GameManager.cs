@@ -179,8 +179,10 @@ public class GameManager : MonoBehaviour
         if (!isGameReady || isWaitingForSummary || currentEvent == null || !isWaitingForChoice || !isStartEvent) return;
 
         EventOutcome outcomeWithRanges = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
-
-        OnStatsUpdated?.Invoke(player);
+        int survivalChange = UnityEngine.Random.Range(outcomeWithRanges.survivalChange.min, outcomeWithRanges.survivalChange.max + 1);
+        int happinessChange = UnityEngine.Random.Range(outcomeWithRanges.happinessChange.min, outcomeWithRanges.happinessChange.max + 1);
+        int wealthChange = UnityEngine.Random.Range(outcomeWithRanges.wealthChange.min, outcomeWithRanges.wealthChange.max + 1);
+        ChangePlayerState(survivalChange, happinessChange, wealthChange);
 
         OnEventConcluded?.Invoke();
         questionsAnsweredToday++;

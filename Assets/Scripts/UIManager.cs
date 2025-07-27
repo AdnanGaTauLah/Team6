@@ -121,7 +121,7 @@ public class UIManager : MonoBehaviour
     private void UpdateDayDisplay(int day)
     {
         currentDay = day;
-        dayText.text = $"Day: {day}";
+        dayText.text = $"{day}";
 
         if (daySummaryPanel.activeSelf)
         {
@@ -135,7 +135,7 @@ public class UIManager : MonoBehaviour
     {
         if (weekText != null)
         {
-            weekText.text = $"Week: {week}";
+            weekText.text = $"{week}";
         }
 
     }
