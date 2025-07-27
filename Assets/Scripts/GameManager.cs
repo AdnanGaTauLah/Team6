@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 // A new, simple data structure to hold the results of a day.
 // This is cleaner than passing three separate integers in an event.
@@ -289,5 +290,23 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitUntil(() => !isWaitingSplash);
         
+    }
+
+    public void RestartScene()
+    {
+        StartCoroutine(RestartSceneCoroutine());
+    }
+
+    // Panggil ini untuk kembali ke main menu
+    public void BackToMainMenu()
+    {
+        Debug.Log("back to main menu");
+        //SceneManager.LoadScene("MainMenu");
+    }
+    IEnumerator RestartSceneCoroutine()
+    {
+        yield return null; // tunggu 1 frame
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.buildIndex);
     }
 }
