@@ -45,7 +45,6 @@ public class GameManager : MonoBehaviour
     private int previousWeek = -1;
     private int currentGoal = 0;
 
-    //Goal
     [System.Serializable]
     public class Goal
     {
@@ -54,19 +53,17 @@ public class GameManager : MonoBehaviour
         public int value;
     }
     public List<Goal> goals;
-    public static bool isStartEvent = false; //for check start event
-    public static bool isEndDay= false; //for check if you can end the day
+    public static bool isStartEvent = false;
+    public static bool isEndDay = false;
     public static bool isEventRunning = false;
     public static bool isWaitingSplash = false;
 
     private bool isGameReady = false;
     private bool isWaitingForSummary;
     private int survivalAtDayStart, happinessAtDayStart, wealthAtDayStart;
-
-    // NEW: A flag to control the coroutine's waiting state.
     private bool isWaitingForChoice = false;
 
-
+    // --- Unity Methods ---
     void Awake()
     {
         gameControls = new PlayerControls();
@@ -99,6 +96,7 @@ public class GameManager : MonoBehaviour
         UIManager.OnSummaryAcknowledged -= EndDaySequence;
     }
 
+    // --- Game Flow Methods ---
     private void InitializePlayer(Player spawnedPlayer)
     {
         this.player = spawnedPlayer;
@@ -114,8 +112,6 @@ public class GameManager : MonoBehaviour
         currentDay = 1;
         questionsAnsweredToday = 0;
         currentGoal = week % goals.Count;
-        // FIX: Instead of a direct call to the UIManager, broadcast the OnGameStarted event.
-        // The UIManager is listening for this and will set its own initial state.
         OnGameStarted?.Invoke();
         BeginNewDay();
     }
@@ -130,38 +126,26 @@ public class GameManager : MonoBehaviour
             previousWeek = week;
         }
         eventController.StartNewDay();
-
         survivalAtDayStart = player.Survival;
         happinessAtDayStart = player.Happiness;
         wealthAtDayStart = player.Wealth;
-
         OnStatsUpdated?.Invoke(player);
         if (isStartEvent)
         {
             StartCoroutine(DailyEventRoutine());
-        }   
+        }
     }
 
-    /// <summary>
-    /// This coroutine manages the sequence of presenting questions for a single day.
-    /// </summary>
     private IEnumerator DailyEventRoutine()
     {
-
         while (questionsAnsweredToday < questionsPerDay)
         {
             yield return new WaitForSeconds(eventDelay);
-
             currentEvent = eventController.GetUniqueEventForDay();
             OnNewEvent?.Invoke(currentEvent);
-
-            // --- FIX: Wait for a choice ---
-            // 1. Set the flag to indicate we are now waiting.
             isWaitingForChoice = true;
-            // 2. Pause the coroutine until the flag is set back to false (by MakeChoice).
             yield return new WaitUntil(() => !isWaitingForChoice);
         }
-
         yield return new WaitUntil(() => !isEndDay);
         isWaitingForSummary = true;
         DaySummaryData summary = new DaySummaryData
@@ -173,22 +157,16 @@ public class GameManager : MonoBehaviour
         OnDayEndSummary?.Invoke(summary);
     }
 
-
     private void MakeChoice(bool choseYes)
     {
-        // FIX: Add a check to ensure we only process a choice when we are waiting for one.
         if (!isGameReady || isWaitingForSummary || currentEvent == null || !isWaitingForChoice || !isStartEvent) return;
-
         EventOutcome outcomeWithRanges = choseYes ? currentEvent.yesOutcome : currentEvent.noOutcome;
         int survivalChange = UnityEngine.Random.Range(outcomeWithRanges.survivalChange.min, outcomeWithRanges.survivalChange.max + 1);
         int happinessChange = UnityEngine.Random.Range(outcomeWithRanges.happinessChange.min, outcomeWithRanges.happinessChange.max + 1);
         int wealthChange = UnityEngine.Random.Range(outcomeWithRanges.wealthChange.min, outcomeWithRanges.wealthChange.max + 1);
         ChangePlayerState(survivalChange, happinessChange, wealthChange);
-
         OnEventConcluded?.Invoke();
         questionsAnsweredToday++;
-
-        // FIX: Un-pause the coroutine by setting the flag to false.
         isWaitingForChoice = false;
         isEndDay = true;
     }
@@ -197,7 +175,6 @@ public class GameManager : MonoBehaviour
     {
         isWaitingForSummary = false;
         CheckForGameOver();
-
         if (isGameReady)
         {
             currentDay++;
@@ -206,16 +183,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // --- Game Over and Goal Logic ---
     private void CheckForGameOver()
     {
         if (!isGameReady) return;
-        //Check Day and Week
-        if(currentDay%7 != 0)
+        if (currentDay % 7 != 0)
         {
-            if (player.Survival <= 0 || player.Happiness <= 0)
-            {
-                GameOver();
-            }
+            if (player.Survival <= 0 || player.Happiness <= 0) GameOver();
         }
         else
         {
@@ -225,7 +199,7 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                bool success=CheckGoal(goals[currentGoal]);
+                bool success = CheckGoal(goals[currentGoal]);
                 if (success)
                 {
                     goals[currentGoal].value += 5;
@@ -236,7 +210,6 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        
     }
 
     private bool CheckGoal(Goal goal)
@@ -244,23 +217,13 @@ public class GameManager : MonoBehaviour
         switch (goal.type.ToLower())
         {
             case "wealth":
-                if (player.Wealth >= goal.value)
-                {
-                    ChangePlayerState(0, 0, -goal.value);
-                    return true;
-                }
+                if (player.Wealth >= goal.value) { ChangePlayerState(0, 0, -goal.value); return true; }
                 break;
             case "happiness":
-                if (player.Happiness > goal.value)
-                {
-                    return true;
-                }
+                if (player.Happiness > goal.value) return true;
                 break;
             case "survival":
-                if(player.Survival> goal.value)
-                {
-                    return true;
-                }
+                if (player.Survival > goal.value) return true;
                 break;
             default:
                 Debug.Log("Unknown goal type: " + goal.type);
@@ -276,7 +239,7 @@ public class GameManager : MonoBehaviour
         OnGameOver?.Invoke();
     }
 
-    public void ChangePlayerState(int survival,int happiness,int wealth)
+    public void ChangePlayerState(int survival, int happiness, int wealth)
     {
         Player.StatChange finalOutcome = new Player.StatChange();
         finalOutcome.survivalChange = survival;
@@ -289,24 +252,5 @@ public class GameManager : MonoBehaviour
     private IEnumerator EndWeekEvent()
     {
         yield return new WaitUntil(() => !isWaitingSplash);
-        
-    }
-
-    public void RestartScene()
-    {
-        StartCoroutine(RestartSceneCoroutine());
-    }
-
-    // Panggil ini untuk kembali ke main menu
-    public void BackToMainMenu()
-    {
-        Debug.Log("back to main menu");
-        //SceneManager.LoadScene("MainMenu");
-    }
-    IEnumerator RestartSceneCoroutine()
-    {
-        yield return null; // tunggu 1 frame
-        Scene currentScene = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(currentScene.buildIndex);
     }
 }
