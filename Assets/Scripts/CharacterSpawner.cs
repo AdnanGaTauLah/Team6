@@ -41,7 +41,6 @@ public class CharacterSpawner : MonoBehaviour
     /// </summary>
     private void SpawnCharacter()
     {
-        // Failsafe checks for prefabs and spawn points
         if (fatherPrefab == null || motherPrefab == null)
         {
             Debug.LogError("Character prefabs are not assigned in the CharacterSpawner!");
@@ -54,7 +53,7 @@ public class CharacterSpawner : MonoBehaviour
         }
 
         GameObject prefabToSpawn = null;
-        Transform spawnPoint = null; // This will hold the correct spawn point
+        Transform spawnPoint = null;
         Player.MentorFigure chosenMentor = Player.MentorFigure.None;
 
         if (GameData.Instance != null)
@@ -62,25 +61,27 @@ public class CharacterSpawner : MonoBehaviour
             chosenMentor = GameData.Instance.selectedMentor;
         }
 
-        // Determine which prefab AND which spawn point to use
+        // --- LOGIC FIX: Inverted Spawning ---
+        // The logic has been swapped to meet the new requirement.
         switch (chosenMentor)
         {
             case Player.MentorFigure.Father:
-                prefabToSpawn = fatherPrefab;
-                spawnPoint = fatherSpawnPoint;
-                break;
-            case Player.MentorFigure.Mother:
+                // When Father is chosen, spawn the MOTHER prefab at the MOTHER's spawn point.
                 prefabToSpawn = motherPrefab;
                 spawnPoint = motherSpawnPoint;
                 break;
-            default:
-                Debug.LogWarning("No mentor chosen or GameData not found. Spawning Father by default.");
+            case Player.MentorFigure.Mother:
+                // When Mother is chosen, spawn the FATHER prefab at the FATHER's spawn point.
                 prefabToSpawn = fatherPrefab;
-                spawnPoint = fatherSpawnPoint; // Default fallback
+                spawnPoint = fatherSpawnPoint;
+                break;
+            default:
+                Debug.LogWarning("No mentor chosen or GameData not found. Spawning Mother by default as a fallback.");
+                prefabToSpawn = motherPrefab; // Default fallback
+                spawnPoint = motherSpawnPoint;
                 break;
         }
 
-        // Instantiate the chosen prefab at the chosen spawn point's position and rotation.
         GameObject playerInstance = Instantiate(prefabToSpawn, spawnPoint.position, spawnPoint.rotation);
         Player playerComponent = playerInstance.GetComponent<Player>();
 
@@ -90,7 +91,7 @@ public class CharacterSpawner : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Spawned character prefab does not have a Player component!");
+            Debug.LogError($"Spawned character prefab '{playerInstance.name}' does not have a Player component!");
         }
     }
 }

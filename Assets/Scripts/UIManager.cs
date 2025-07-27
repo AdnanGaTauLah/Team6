@@ -26,9 +26,25 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject endDayEventUI;
     [SerializeField] private GameObject daySummaryPanel;
 
-    // NEW: A specific reference to the panel containing the question and buttons.
     [Tooltip("The child panel that holds the event question and Yes/No buttons.")]
     [SerializeField] private GameObject eventQuestionPanel;
+
+    // --- UPDATED: Character Specific UI Elements ---
+    [Header("Character UI")]
+    [Tooltip("The UI Image element that will display the chosen character's logo.")]
+    [SerializeField] private Image characterLogoImage;
+    [Tooltip("The sprite for the Father's logo.")]
+    [SerializeField] private Sprite fatherLogoSprite;
+    [Tooltip("The sprite for the Mother's logo.")]
+    [SerializeField] private Sprite motherLogoSprite;
+
+    [Tooltip("The UI Image element for the happiness stat icon.")]
+    [SerializeField] private Image happinessIconImage;
+    [Tooltip("The sprite for the Father's happiness icon.")]
+    [SerializeField] private Sprite fatherHappinessSprite;
+    [Tooltip("The sprite for the Mother's happiness icon.")]
+    [SerializeField] private Sprite motherHappinessSprite;
+    // ------------------------------------
 
     [Header("Day Summary Elements")]
     [SerializeField] private TextMeshProUGUI summaryTitleText;
@@ -62,8 +78,6 @@ public class UIManager : MonoBehaviour
         GameManager.OnGameOver += ShowGameOverScreen;
         GameManager.OnWeekChanged += UpdateWeekDisplay;
         GameManager.DisplayGoal += ShowGoal;
-
-        // NEW: Subscribe to the new event from the GameManager.
         GameManager.OnEventConcluded += HideEventPanel;
     }
 
@@ -76,9 +90,7 @@ public class UIManager : MonoBehaviour
         GameManager.OnNewEvent -= DisplayEvent;
         GameManager.OnGameOver -= ShowGameOverScreen;
         GameManager.OnWeekChanged -= UpdateWeekDisplay;
-        GameManager.DisplayGoal += ShowGoal;
-
-        // NEW: Unsubscribe from the event to prevent memory leaks.
+        GameManager.DisplayGoal -= ShowGoal; // FIX: Was using +=, should be -=
         GameManager.OnEventConcluded -= HideEventPanel;
     }
 
@@ -97,9 +109,44 @@ public class UIManager : MonoBehaviour
         gameplayPanel.SetActive(true);
         gameOverPanel.SetActive(false);
         daySummaryPanel.SetActive(false);
-
-        // Ensure the event panel is hidden at the very start.
         eventQuestionPanel.SetActive(false);
+
+        // Call the method to set all character-specific UI when the game starts.
+        UpdateCharacterUI();
+    }
+
+    /// <summary>
+    /// Reads the character choice from GameData and updates all character-specific UI elements.
+    /// </summary>
+    private void UpdateCharacterUI()
+    {
+        if (GameData.Instance == null)
+        {
+            Debug.LogError("Could not find GameData instance to determine character choice.");
+            return;
+        }
+
+        bool isFatherChosen = (GameData.Instance.selectedMentor == Player.MentorFigure.Father);
+
+        // Update main character logo
+        if (characterLogoImage != null)
+        {
+            characterLogoImage.sprite = isFatherChosen ? fatherLogoSprite : motherLogoSprite;
+        }
+        else
+        {
+            Debug.LogWarning("Character Logo Image is not assigned in the UIManager.");
+        }
+
+        // Update happiness stat icon
+        if (happinessIconImage != null)
+        {
+            happinessIconImage.sprite = isFatherChosen ? fatherHappinessSprite : motherHappinessSprite;
+        }
+        else
+        {
+            Debug.LogWarning("Happiness Icon Image is not assigned in the UIManager.");
+        }
     }
 
     private void ShowDaySummary(DaySummaryData summary)
@@ -108,38 +155,29 @@ public class UIManager : MonoBehaviour
         {
             summaryTitleText.text = $"Hari ke-{currentDay} sudah berakhir";
         }
-
-        // Using color tags to make the summary more readable.
         summarySurvivalText.text = $"Survival: <color={(summary.survivalChange >= 0 ? "green" : "red")}>{summary.survivalChange:+#;-#;0}</color>";
         summaryHappinessText.text = $"Happiness: <color={(summary.happinessChange >= 0 ? "green" : "red")}>{summary.happinessChange:+#;-#;0}</color>";
         summaryWealthText.text = $"Wealth: <color={(summary.wealthChange >= 0 ? "green" : "red")}>{summary.wealthChange:+#;-#;0}</color>";
-
         gameplayPanel.SetActive(false);
         daySummaryPanel.SetActive(true);
     }
-
     private void UpdateDayDisplay(int day)
     {
         currentDay = day;
         dayText.text = $"{day}";
-
         if (daySummaryPanel.activeSelf)
         {
             daySummaryPanel.SetActive(false);
             gameplayPanel.SetActive(true);
         }
-       
     }
-
     private void UpdateWeekDisplay(int week)
     {
         if (weekText != null)
         {
             weekText.text = $"{week}";
         }
-
     }
-
     private void UpdateStatsDisplay(Player player)
     {
         if (player != null)
@@ -149,10 +187,6 @@ public class UIManager : MonoBehaviour
             wealthText.text = player.Wealth.ToString();
         }
     }
-
-    /// <summary>
-    /// REFACTORED: This now shows the specific question panel.
-    /// </summary>
     private void DisplayEvent(GameEvent gameEvent)
     {
         if (gameEvent != null)
@@ -161,31 +195,23 @@ public class UIManager : MonoBehaviour
             eventQuestionPanel.SetActive(true);
         }
     }
-
-    /// <summary>
-    /// NEW: This method is called by the OnEventConcluded event from the GameManager.
-    /// </summary>
     private void HideEventPanel()
     {
         eventQuestionPanel.SetActive(false);
     }
-
     private void ShowGameOverScreen()
     {
         gameplayPanel.SetActive(false);
         daySummaryPanel.SetActive(false);
         gameOverPanel.SetActive(true);
     }
-
     private void ShowGoal(GameManager.Goal goal)
     {
         GameManager.isStartEvent = false;
         goalText.text = goal.narasi.Replace("{value}", goal.value.ToString());
         DisplayQuestion(false);
         goalUI.SetActive(true);
-        
     }
-
     public void DisplayQuestion(bool isStartEvent)
     {
         if (!isStartEvent)
@@ -203,9 +229,7 @@ public class UIManager : MonoBehaviour
         GameManager.isStartEvent = true;
         goalUI.SetActive(false);
         gameManager.BeginNewDay();
-        //DisplayQuestion(true);
     }
-
     public void DisplayEndDayEvent(string textEvent)
     {
         endDayEventText.text = $"Apakah Anda ingin {textEvent}?";
@@ -224,7 +248,6 @@ public class UIManager : MonoBehaviour
             return;
         }
     }
-
     private void CheckEventEndDay()
     {
         if (endEvent == "bekerja")
@@ -232,7 +255,7 @@ public class UIManager : MonoBehaviour
             DisplaySplashScreen("Anda pergi bekerja");
             workEvent.Work();
         }
-        if(endEvent == "di rumah")
+        if (endEvent == "di rumah")
         {
             DisplaySplashScreen("Anda menghabiskan Waktu di rumah Bersama keluarga");
             stayEvent.Stay();
@@ -242,18 +265,12 @@ public class UIManager : MonoBehaviour
     {
         StartCoroutine(DisplaySplashScreenCoroutine(message));
     }
-
     private IEnumerator DisplaySplashScreenCoroutine(string message)
     {
         splashText.text = message;
         splashScreen.SetActive(true);
-
-       
         yield return new WaitForSeconds(1.5f);
         GameManager.isEndDay = false;
         splashScreen.SetActive(false);
-        //gameManager.StartEvent();
     }
-
-
 }
