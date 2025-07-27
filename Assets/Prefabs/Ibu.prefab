@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5057165617754564514}
   m_Layer: 0
   m_Name: Ibu
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -88,7 +88,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -99905693
-  m_SortingLayer: 3
+  m_SortingLayer: 4
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 66df24e077da3d3459385ed0069a4071, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
