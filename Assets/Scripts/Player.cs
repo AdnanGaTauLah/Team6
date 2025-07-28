@@ -18,11 +18,11 @@ public class Player : MonoBehaviour
     // --- PRIVATE FIELDS ---
     [Header("Player Resources")]
     [Tooltip("Represents the player's health and physical well-being. Game over if this drops below 0.")]
-    [SerializeField] private int _survival = 50;
+    [SerializeField] private int _survival = 15;
     [Tooltip("Represents the player's mental state and joy. Game over if this drops below 0.")]
-    [SerializeField] private int _happiness = 50;
+    [SerializeField] private int _happiness = 15;
     [Tooltip("Represents the player's financial resources. Game over if this drops below 0.")]
-    [SerializeField] private int _wealth = 50;
+    [SerializeField] private int _wealth = 15;
 
     // This field will store the choice made in the menu.
     private MentorFigure _chosenMentor = MentorFigure.None;
