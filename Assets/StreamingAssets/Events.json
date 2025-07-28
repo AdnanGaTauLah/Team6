@@ -1,8 +1,40 @@
 {
   "events": [
     {
-      "type": "belanja kebutuhan",
-      "question": "Ibu mau ke pasar membeli bahan buat masak, boleh minta uang {component}?",
+      "type": "Belanja kebutuhan",
+      "question": "{component} hari ini mau habis, kita perlu beli persediaan",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 10,
+          "max": 10
+        },
+        "happinessChange": {
+          "min": 0,
+          "max": 0
+        },
+        "wealthChange": {
+          "min": -5,
+          "max": -5
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": -5,
+          "max": -5
+        },
+        "happinessChange": {
+          "min": 0,
+          "max": 0
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    },
+    {
+      "type": "Biaya kesehatan",
+      "question": "{component} sedang sakit, kita perlu membawanya ke dokter.",
       "yesOutcome": {
         "survivalChange": {
           "min": 10,
@@ -14,12 +46,300 @@
         },
         "wealthChange": {
           "min": -15,
-          "max": -5
+          "max": -15
         }
       },
       "noOutcome": {
         "survivalChange": {
           "min": -10,
+          "max": -10
+        },
+        "happinessChange": {
+          "min": 0,
+          "max": 0
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    },
+    {
+      "type": "Jual barang hiburan",
+      "question": "Kita jarang pake {component}, dijual aja gak sih?",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": -15,
+          "max": -15
+        },
+        "wealthChange": {
+          "min": 15,
+          "max": 15
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": 5,
+          "max": 5
+        },
+        "wealthChange": {
+          "min": -5,
+          "max": -5
+        }
+      }
+    },
+    {
+      "type": "Barang kebutuhan rusak",
+      "question": "Waduh, {component} kita rusak, apa kita perlu panggil tukang servis?",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 5,
+          "max": 5
+        },
+        "happinessChange": {
+          "min": 0,
+          "max": 0
+        },
+        "wealthChange": {
+          "min": -10,
+          "max": -10
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": -5,
+          "max": -5
+        },
+        "happinessChange": {
+          "min": 0,
+          "max": 0
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    },
+    {
+      "type": "Barang hiburan rusak",
+      "question": "{component} rusak, keluargamu menyarankan untuk diservis",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": 5,
+          "max": 5
+        },
+        "wealthChange": {
+          "min": -10,
+          "max": -10
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": -5,
+          "max": -5
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    },
+    {
+      "type": "unique",
+      "question": "Bosen di rumah terus, liburan yuk?",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": 10,
+          "max": 10
+        },
+        "wealthChange": {
+          "min": -15,
+          "max": -15
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": -5,
+          "max": -5
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    },
+    {
+      "type": "Hiburan anak",
+      "question": "Anakmu mau beli {component}, turuti permintaannya?",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": 5,
+          "max": 5
+        },
+        "wealthChange": {
+          "min": -10,
+          "max": -10
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": -5,
+          "max": -5
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    },
+    {
+      "type": "Hiburan keluarga",
+      "question": "Mau beli {component} buat hiburan keluarga?",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": 5,
+          "max": 5
+        },
+        "wealthChange": {
+          "min": -10,
+          "max": -10
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": -5,
+          "max": -5
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    },
+    {
+      "type": "Barang gratis",
+      "question": "Ada yang ngasih {component} bekas, mau kita ambil?",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 5,
+          "max": 5
+        },
+        "happinessChange": {
+          "min": 5,
+          "max": 5
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": 0,
+          "max": 0
+        },
+        "happinessChange": {
+          "min": 0,
+          "max": 0
+        },
+        "wealthChange": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    },
+    {
+      "type": "unique",
+      "question": "Semalam rumah kemalingan!",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": -5,
+          "max": -5
+        },
+        "happinessChange": {
+          "min": 0,
+          "max": 0
+        },
+        "wealthChange": {
+          "min": -5,
+          "max": -5
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": -5,
+          "max": -5
+        },
+        "happinessChange": {
+          "min": 0,
+          "max": 0
+        },
+        "wealthChange": {
+          "min": -5,
+          "max": -5
+        }
+      }
+    },
+    {
+      "type": "Perbaikan rumah",
+      "question": "Rumah mengalami {component}, apakah sebaiknya diperbaiki?",
+      "yesOutcome": {
+        "survivalChange": {
+          "min": 5,
+          "max": 5
+        },
+        "happinessChange": {
+          "min": 0,
+          "max": 0
+        },
+        "wealthChange": {
+          "min": -10,
+          "max": -10
+        }
+      },
+      "noOutcome": {
+        "survivalChange": {
+          "min": -5,
           "max": -5
         },
         "happinessChange": {
@@ -34,122 +354,29 @@
     },
     {
       "type": "unique",
-      "question": "Barang ini sepertinya tidak terpakai, jual saja?",
-      "yesOutcome": {
-        "survivalChange": {
-          "min": -10,
-          "max": -2
-        },
-        "happinessChange": {
-          "min": 10,
-          "max": 20
-        },
-        "wealthChange": {
-          "min": 0,
-          "max": 0
-        }
-      },
-      "noOutcome": {
-        "survivalChange": {
-          "min": 0,
-          "max": 0
-        },
-        "happinessChange": {
-          "min": -12,
-          "max": -8
-        },
-        "wealthChange": {
-          "min": 0,
-          "max": 0
-        }
-      }
-    },
-    {
-      "question": "Perabotan kita ada yang rusak, panggil tukang servis?",
+      "question": "Sumbangan wajib mingguan buat ormas setempat, bayar atau kami obrak-abrik!",
       "yesOutcome": {
         "survivalChange": {
           "min": 0,
           "max": 0
         },
         "happinessChange": {
-          "min": -50,
-          "max": 50
+          "min": 0,
+          "max": 0
         },
         "wealthChange": {
-          "min": -50,
-          "max": 100
+          "min": -5,
+          "max": -5
         }
       },
       "noOutcome": {
         "survivalChange": {
-          "min": 0,
-          "max": 0
-        },
-        "happinessChange": {
-          "min": 1,
-          "max": 5
-        },
-        "wealthChange": {
-          "min": 0,
-          "max": 0
-        }
-      }
-    },
-    {
-      "question": "Ini hasil dari ngojek hari ini",
-      "yesOutcome": {
-        "survivalChange": {
-          "min": 10,
-          "max": 20
-        },
-        "happinessChange": {
-          "min": -15,
-          "max": -5
-        },
-        "wealthChange": {
-          "min": -20,
-          "max": -10
-        }
-      },
-      "noOutcome": {
-        "survivalChange": {
-          "min": -15,
+          "min": -5,
           "max": -5
         },
         "happinessChange": {
-          "min": 10,
-          "max": 20
-        },
-        "wealthChange": {
-          "min": 0,
-          "max": 0
-        }
-      }
-    },
-    {
-      "question": "Bosen di rumah terus, liburan yuk?",
-      "yesOutcome": {
-        "survivalChange": {
-          "min": 10,
-          "max": 20
-        },
-        "happinessChange": {
-          "min": -15,
+          "min": -5,
           "max": -5
-        },
-        "wealthChange": {
-          "min": -20,
-          "max": -10
-        }
-      },
-      "noOutcome": {
-        "survivalChange": {
-          "min": -15,
-          "max": -5
-        },
-        "happinessChange": {
-          "min": 10,
-          "max": 20
         },
         "wealthChange": {
           "min": 0,

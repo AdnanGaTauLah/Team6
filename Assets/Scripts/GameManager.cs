@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
 // A new, simple data structure to hold the results of a day.
-// This is cleaner than passing three separate integers in an event.
 public struct DaySummaryData
 {
     public int survivalChange;
@@ -35,7 +34,13 @@ public class GameManager : MonoBehaviour
     [Tooltip("The delay in seconds before showing a new event question.")]
     public float eventDelay = 1.5f;
 
-    // --- Private Fields ---
+    // --- Static State Variables ---
+    public static bool isStartEvent = false;
+    public static bool isEndDay = false;
+    public static bool isEventRunning = false;
+    public static bool isWaitingSplash = false;
+
+    // --- Private Instance Fields ---
     private Player player;
     private PlayerControls gameControls;
     private GameEvent currentEvent;
@@ -44,6 +49,10 @@ public class GameManager : MonoBehaviour
     private int week = 0;
     private int previousWeek = -1;
     private int currentGoal = 0;
+    private bool isGameReady = false;
+    private bool isWaitingForSummary;
+    private int survivalAtDayStart, happinessAtDayStart, wealthAtDayStart;
+    private bool isWaitingForChoice = false;
 
     [System.Serializable]
     public class Goal
@@ -53,19 +62,16 @@ public class GameManager : MonoBehaviour
         public int value;
     }
     public List<Goal> goals;
-    public static bool isStartEvent = false;
-    public static bool isEndDay = false;
-    public static bool isEventRunning = false;
-    public static bool isWaitingSplash = false;
-
-    private bool isGameReady = false;
-    private bool isWaitingForSummary;
-    private int survivalAtDayStart, happinessAtDayStart, wealthAtDayStart;
-    private bool isWaitingForChoice = false;
 
     // --- Unity Methods ---
     void Awake()
     {
+        // Reset static variables to ensure a clean state on scene load/restart.
+        isStartEvent = false;
+        isEndDay = false;
+        isEventRunning = false;
+        isWaitingSplash = false;
+
         gameControls = new PlayerControls();
         if (eventController == null)
         {
@@ -113,6 +119,21 @@ public class GameManager : MonoBehaviour
         questionsAnsweredToday = 0;
         currentGoal = week % goals.Count;
         OnGameStarted?.Invoke();
+
+        // REFACTORED: Start a coroutine to handle the startup sequence safely.
+        StartCoroutine(StartGameDelayed());
+    }
+
+    /// <summary>
+    /// NEW: This coroutine waits for the EventController to be ready before starting the game.
+    /// This prevents a race condition in WebGL builds.
+    /// </summary>
+    private IEnumerator StartGameDelayed()
+    {
+        // Wait until the EventController signals that it has finished loading the JSON files.
+        yield return new WaitUntil(() => eventController.IsReady);
+
+        // Now that the data is loaded, it's safe to begin the game logic.
         BeginNewDay();
     }
 
