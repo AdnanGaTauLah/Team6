@@ -47,9 +47,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e37ff11a8d086ac4cbe84838c161ca26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _survival: 50
-  _happiness: 50
-  _wealth: 50
+  _survival: 15
+  _happiness: 15
+  _wealth: 15
 --- !u!212 &5731544406073595230
 SpriteRenderer:
   m_ObjectHideFlags: 0
